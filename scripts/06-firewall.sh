@@ -2,9 +2,10 @@
 # =============================================================================
 # Firewall — Restrict all cluster access to internal LAN only
 # =============================================================================
-# Uses nftables on the HOST to:
+# Rocky Linux 9 host — uses nftables directly (firewalld disabled).
+# Rules:
 #   - Allow full cluster-internal traffic
-#   - Allow LAN access to cluster services (Rancher, Plex, K8s API, SSH)
+#   - Allow LAN access to cluster services (OpenClaw, Plex, K8s API, SSH)
 #   - Block all access from outside the LAN
 #   - NAT cluster nodes' outbound internet (for updates, K3s install, etc.)
 #   - Persist rules across reboots
@@ -23,6 +24,12 @@ NODE2_IP="$5"
 NODE3_IP="$6"
 
 log() { echo "[fw] $*"; }
+
+# ---- Rocky Linux 9: ensure firewalld is stopped before applying nftables ----
+if systemctl is-active --quiet firewalld 2>/dev/null; then
+  log "Stopping firewalld (conflicts with nftables)..."
+  systemctl disable --now firewalld
+fi
 
 log "Applying host nftables firewall rules..."
 
@@ -132,8 +139,14 @@ NFTEOF
 nft -f /etc/nftables.conf
 
 # Enable and persist across reboots
+# Rocky Linux 9: nftables.service reads /etc/nftables.conf on start
 systemctl enable nftables
 systemctl restart nftables
+
+# ---- SELinux: allow nftables and IP forwarding without AVC denials ----
+# These sysctl values are already set by 02-network-setup.sh, but ensure
+# SELinux doesn't interfere with the forwarding rules
+sysctl -w net.ipv4.ip_forward=1 >/dev/null
 
 log "Firewall applied. Cluster is accessible from LAN (${LAN_SUBNET}) only."
 log "Direct LAN → node access is blocked; services are exposed via the host."
@@ -146,8 +159,9 @@ echo "Cluster subnet:        192.168.100.0/24 (internal only)"
 echo ""
 echo "Allowed inbound (from LAN only):"
 echo "  :22    SSH to host"
-echo "  :80    Rancher HTTP"
-echo "  :443   Rancher HTTPS"
+echo "  :80    OpenClaw UI / Claude Web UI"
+echo "  :443   HTTPS"
+echo "  :3001  OpenClaw Gateway API"
 echo "  :6443  Kubernetes API"
 echo "  :32400 Plex Media Server"
 echo ""

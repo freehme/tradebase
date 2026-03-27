@@ -3,22 +3,23 @@
 # Virtual 3-Node K3s Cluster — Full Deployment Orchestrator
 # =============================================================================
 # Stack:
-#   Hypervisor  : KVM/QEMU + libvirt  (host)
-#   OS Images   : Ubuntu 22.04 LTS    (each VM via cloud-init)
+#   Host OS     : Rocky Linux 9       (SELinux enforcing, KVM hypervisor)
+#   Hypervisor  : KVM/QEMU + libvirt
+#   VM Guest OS : Ubuntu 22.04 LTS    (each VM via cloud-init)
 #   Cluster     : K3s (lightweight Kubernetes) — 1 server + 2 agents
-#   Cloud UI    : Rancher              (open-source cloud management)
+#   AI Agents   : OpenClaw + Claude API
 #   Media       : Plex Media Server
 #   Network     : Isolated bridge (192.168.100.0/24), internal LAN only
-#   Security    : iptables, SSH key-only, namespace isolation
+#   Security    : SELinux enforcing, nftables, SSH key-only, K8s NetworkPolicy
 #
 # Usage:
 #   sudo ./deploy-cluster.sh [--dry-run] [--skip-prereqs] [--skip-vms]
 #
 # Requirements:
-#   - Linux host (Ubuntu 22.04+ or Debian 12+)
+#   - Rocky Linux 9 host (fresh minimal install)
 #   - 16 GB RAM minimum (32 GB recommended)
 #   - 150 GB free disk space
-#   - KVM-capable CPU (check: egrep -c '(vmx|svm)' /proc/cpuinfo > 0)
+#   - KVM-capable CPU (check: grep -cP '(vmx|svm)' /proc/cpuinfo)
 #   - Internal LAN interface (set LAN_IFACE below)
 # =============================================================================
 
@@ -115,9 +116,22 @@ require_root() {
 
 check_kvm() {
   local count
-  count=$(egrep -c '(vmx|svm)' /proc/cpuinfo 2>/dev/null || echo 0)
+  count=$(grep -cP '(vmx|svm)' /proc/cpuinfo 2>/dev/null || echo 0)
   [[ $count -gt 0 ]] || error "KVM not supported on this CPU. Check BIOS virtualization settings."
   log "KVM supported: $count vCPU thread(s) with virtualization extensions."
+}
+
+check_selinux() {
+  local mode
+  mode=$(getenforce 2>/dev/null || echo "Disabled")
+  if [[ "$mode" == "Disabled" ]]; then
+    error "SELinux is Disabled. Rocky Linux 9 requires SELinux enforcing. Check /etc/selinux/config."
+  elif [[ "$mode" == "Permissive" ]]; then
+    warn "SELinux is Permissive. Setting to Enforcing..."
+    run setenforce 1
+    run sed -i 's/^SELINUX=permissive/SELINUX=enforcing/' /etc/selinux/config
+  fi
+  log "SELinux mode: $(getenforce)"
 }
 
 wait_for_ssh() {
@@ -153,6 +167,17 @@ preflight() {
   step "Preflight checks"
   require_root
   check_kvm
+  check_selinux
+
+  # Verify Rocky Linux 9
+  if [[ -f /etc/rocky-release ]]; then
+    local ver
+    ver=$(grep -oP '\d+' /etc/rocky-release | head -1)
+    [[ "$ver" == "9" ]] || warn "Expected Rocky Linux 9, got version ${ver}. Proceeding anyway."
+    log "Host OS: $(cat /etc/rocky-release)"
+  else
+    warn "Rocky Linux not detected. This script is tuned for Rocky Linux 9."
+  fi
 
   [[ -f "${SSH_KEY_FILE}" ]] || {
     log "Generating SSH keypair at ${SSH_KEY_FILE}..."
@@ -164,9 +189,6 @@ preflight() {
   [[ "$PLEX_CLAIM" == "claim-REPLACEME" ]] && \
     warn "PLEX_CLAIM is not set. Plex will start but require manual claim at first launch."
 
-  [[ "$RANCHER_BOOTSTRAP_PASSWORD" == "ChangeMePlease2024!" ]] && \
-    warn "Using default Rancher password. Change RANCHER_BOOTSTRAP_PASSWORD before deploying."
-
   mkdir -p "$PLEX_MEDIA_HOST_PATH" "$PLEX_CONFIG_HOST_PATH"
   touch "$LOG_FILE"
   log "Preflight passed."
@@ -177,26 +199,69 @@ preflight() {
 # ---------------------------------------------------------------------------
 install_prereqs() {
   $SKIP_PREREQS && { log "Skipping prereqs (--skip-prereqs)"; return; }
-  step "Installing host prerequisites"
+  step "Installing host prerequisites (Rocky Linux 9)"
 
-  run apt-get update -qq
-  run apt-get install -y --no-install-recommends \
-    qemu-kvm libvirt-daemon-system libvirt-clients \
-    bridge-utils virtinst genisoimage cloud-image-utils \
-    curl wget git jq nftables netcat-openbsd \
-    cpu-checker virt-manager \
+  # ---- System update ----
+  run dnf update -y -q
+
+  # ---- EPEL (needed for genisoimage, cloud-utils, nmap-ncat) ----
+  run dnf install -y -q epel-release
+  run dnf config-manager --set-enabled crb   # CodeReady Builder — some deps need this
+
+  # ---- Virtualization group + extras ----
+  # "@virtualization" installs: qemu-kvm, libvirt, libvirt-client, virt-install, bridge-utils
+  run dnf groupinstall -y "Virtualization Host"
+  run dnf install -y -q \
+    genisoimage \
+    cloud-utils \
+    curl wget git jq \
+    nftables \
+    nmap-ncat \
+    openssl \
+    policycoreutils-python-utils \
+    libguestfs-tools \
     2>/dev/null
 
+  # ---- Disable firewalld — we manage rules with nftables directly ----
+  if systemctl is-active --quiet firewalld; then
+    log "Disabling firewalld (replaced by nftables)..."
+    run systemctl disable --now firewalld
+  fi
+  run systemctl enable --now nftables
+
+  # ---- Enable and start libvirtd ----
   run systemctl enable --now libvirtd
   run usermod -aG libvirt,kvm "${SUDO_USER:-$USER}"
 
-  # Download Ubuntu cloud image if not cached
+  # ---- SELinux: set required booleans for KVM/libvirt ----
+  log "Configuring SELinux booleans for libvirt/KVM..."
+  run setsebool -P virt_use_nfs 1           # allow VMs to use NFS storage
+  run setsebool -P virt_use_samba 1         # allow VMs to use Samba
+  run setsebool -P virt_sandbox_use_all_caps 1
+  run setsebool -P domain_can_mmap_files 1  # needed for some K3s CNI operations
+
+  # ---- SELinux: label custom media paths so libvirt/containers can access them ----
+  log "Setting SELinux file contexts for media and config paths..."
+  run mkdir -p "$PLEX_MEDIA_HOST_PATH" "$PLEX_CONFIG_HOST_PATH"
+  run semanage fcontext -a -t virt_image_t "${PLEX_MEDIA_HOST_PATH}(/.*)?" 2>/dev/null || \
+    semanage fcontext -m -t virt_image_t "${PLEX_MEDIA_HOST_PATH}(/.*)?";
+  run semanage fcontext -a -t virt_image_t "${PLEX_CONFIG_HOST_PATH}(/.*)?" 2>/dev/null || \
+    semanage fcontext -m -t virt_image_t "${PLEX_CONFIG_HOST_PATH}(/.*)?";
+  run restorecon -Rv "$PLEX_MEDIA_HOST_PATH" "$PLEX_CONFIG_HOST_PATH"
+
+  # ---- SELinux: ensure libvirt image dir has correct context ----
+  run restorecon -Rv "$IMAGE_DIR"
+
+  # ---- Download Ubuntu 22.04 cloud image for VMs ----
   if [[ ! -f "$BASE_IMAGE" ]]; then
     log "Downloading Ubuntu 22.04 cloud image..."
     run wget -q --show-progress -O "$BASE_IMAGE" "$UBUNTU_URL"
+    # Restore SELinux context on the downloaded image
+    run restorecon "$BASE_IMAGE"
   else
     log "Base image already exists: $BASE_IMAGE"
   fi
+
   log "Prerequisites installed."
 }
 
