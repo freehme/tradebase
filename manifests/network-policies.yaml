@@ -1,0 +1,139 @@
+---
+# =============================================================================
+# Network Policies — Kubernetes-level traffic segmentation
+# =============================================================================
+# Each namespace is isolated by default; only necessary cross-namespace
+# communication is explicitly permitted.
+# =============================================================================
+
+# ---- Default deny-all for plex namespace ----
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: plex
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Allow inbound to Plex only on port 32400 from within cluster + LAN ingress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-plex-ingress
+  namespace: plex
+spec:
+  podSelector:
+    matchLabels:
+      app: plex
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 32400
+  egress:
+    # Allow DNS
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow outbound HTTPS (Plex metadata, activation)
+    - ports:
+        - protocol: TCP
+          port: 443
+    # Allow NTP
+    - ports:
+        - protocol: UDP
+          port: 123
+---
+# ---- Default deny-all for claude-agents namespace ----
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: claude-agents
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Allow Claude agents: inbound on their API port, outbound to Claude API (HTTPS)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-claude-agents
+  namespace: claude-agents
+spec:
+  podSelector:
+    matchLabels:
+      app: claude-agent
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Web UI
+    - ports:
+        - protocol: TCP
+          port: 8080
+    # Agent API
+    - ports:
+        - protocol: TCP
+          port: 3000
+  egress:
+    # DNS
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Anthropic API + HTTPS
+    - ports:
+        - protocol: TCP
+          port: 443
+---
+# ---- Default deny-all for cattle-system (Rancher) ----
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: cattle-system
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-rancher
+  namespace: cattle-system
+spec:
+  podSelector:
+    matchLabels:
+      app: rancher
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443

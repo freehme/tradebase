@@ -1,0 +1,38 @@
+---
+# =============================================================================
+# Namespaces — one per service, for isolation and RBAC
+# =============================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: plex
+  labels:
+    app.kubernetes.io/name: plex
+    environment: homelab
+    access: internal-only
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: claude-agents
+  labels:
+    app.kubernetes.io/name: claude-agents
+    environment: homelab
+    access: internal-only
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cattle-system
+  labels:
+    app.kubernetes.io/name: rancher
+    environment: homelab
+    access: internal-only
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metallb-system
+  labels:
+    app.kubernetes.io/name: metallb

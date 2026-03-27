@@ -1,0 +1,364 @@
+---
+# =============================================================================
+# Claude AI Agents — Containerized K3s Deployment
+# =============================================================================
+# Deploys a multi-container Claude agent service:
+#   1. claude-agent-api  — FastAPI service wrapping Anthropic SDK
+#                          Exposes a REST API for agent invocation
+#   2. open-webui        — Web UI for interacting with Claude agents
+#                          (Open WebUI supports Claude via OpenAI-compat API)
+#
+# SETUP REQUIRED before applying:
+#   kubectl create secret generic claude-api-secret \
+#     --namespace claude-agents \
+#     --from-literal=ANTHROPIC_API_KEY='sk-ant-YOUR_KEY_HERE'
+#
+# Access (LAN only):
+#   Web UI:   http://192.168.100.31
+#   Agent API: http://192.168.100.31:3000/v1
+# =============================================================================
+
+---
+# ---- ConfigMap ----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: claude-agent-config
+  namespace: claude-agents
+data:
+  # Claude model — use latest and most capable
+  CLAUDE_MODEL: "claude-sonnet-4-6"
+  # Fallback model for high-volume/low-priority tasks
+  CLAUDE_FAST_MODEL: "claude-haiku-4-5-20251001"
+  # API host
+  API_HOST: "0.0.0.0"
+  API_PORT: "3000"
+  # Max concurrent agent sessions
+  MAX_SESSIONS: "10"
+  # System prompt for the default agent persona
+  DEFAULT_SYSTEM_PROMPT: |
+    You are a helpful AI assistant running in a secure home lab cluster.
+    You have access to tools and can help with research, coding, automation,
+    and system management tasks. Always be helpful, accurate, and concise.
+  # Open WebUI config
+  WEBUI_AUTH: "true"
+  ENABLE_SIGNUP: "false"       # Disable public signup — invite-only
+  DEFAULT_MODELS: "claude-sonnet-4-6"
+  OPENAI_API_BASE_URL: "http://claude-agent-api:3000/v1"
+---
+# ---- Secret (apply manually with your real API key — do not commit key) ----
+# kubectl create secret generic claude-api-secret \
+#   --namespace claude-agents \
+#   --from-literal=ANTHROPIC_API_KEY='sk-ant-YOUR_KEY'
+#
+# The yaml below creates a placeholder — replace with the kubectl command above.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: claude-api-secret
+  namespace: claude-agents
+type: Opaque
+stringData:
+  ANTHROPIC_API_KEY: "REPLACE_ME_USE_KUBECTL_CREATE_SECRET"
+---
+# ---- PVC for Open WebUI data ----
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openwebui-data-pvc
+  namespace: claude-agents
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: local-path   # K3s built-in local storage
+---
+# ---- Claude Agent API — FastAPI service ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: claude-agent-api
+  namespace: claude-agents
+  labels:
+    app: claude-agent
+    component: api
+spec:
+  replicas: 2    # 2 replicas across the 2 worker nodes for HA
+  selector:
+    matchLabels:
+      app: claude-agent
+      component: api
+  template:
+    metadata:
+      labels:
+        app: claude-agent
+        component: api
+    spec:
+      # Spread across worker nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: claude-agent
+                    component: api
+                topologyKey: kubernetes.io/hostname
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+
+      initContainers:
+        # Bootstrap the FastAPI app code into the container
+        - name: setup-agent
+          image: python:3.12-slim
+          command:
+            - sh
+            - -c
+            - |
+              pip install --quiet --no-cache-dir \
+                anthropic fastapi uvicorn[standard] pydantic httpx 2>&1 | tail -5
+              mkdir -p /app
+              cat > /app/main.py << 'PYEOF'
+              import os, asyncio
+              from fastapi import FastAPI, HTTPException, Header
+              from fastapi.middleware.cors import CORSMiddleware
+              from pydantic import BaseModel
+              from typing import Optional, List
+              import anthropic
+
+              app = FastAPI(title="Claude Agent API", version="1.0")
+
+              app.add_middleware(
+                  CORSMiddleware,
+                  allow_origins=["*"],
+                  allow_credentials=True,
+                  allow_methods=["*"],
+                  allow_headers=["*"],
+              )
+
+              client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+              DEFAULT_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6")
+              DEFAULT_SYSTEM = os.getenv("DEFAULT_SYSTEM_PROMPT", "You are a helpful assistant.")
+
+              class Message(BaseModel):
+                  role: str
+                  content: str
+
+              class ChatRequest(BaseModel):
+                  model: Optional[str] = None
+                  messages: List[Message]
+                  system: Optional[str] = None
+                  max_tokens: Optional[int] = 4096
+                  stream: Optional[bool] = False
+
+              class ChatResponse(BaseModel):
+                  id: str
+                  model: str
+                  content: str
+                  input_tokens: int
+                  output_tokens: int
+
+              @app.get("/health")
+              def health():
+                  return {"status": "ok", "model": DEFAULT_MODEL}
+
+              @app.get("/v1/models")
+              def list_models():
+                  return {"object": "list", "data": [
+                      {"id": "claude-sonnet-4-6", "object": "model"},
+                      {"id": "claude-haiku-4-5-20251001", "object": "model"},
+                      {"id": "claude-opus-4-6", "object": "model"},
+                  ]}
+
+              @app.post("/v1/chat/completions")
+              async def chat(req: ChatRequest):
+                  try:
+                      msgs = [{"role": m.role, "content": m.content} for m in req.messages]
+                      resp = client.messages.create(
+                          model=req.model or DEFAULT_MODEL,
+                          max_tokens=req.max_tokens,
+                          system=req.system or DEFAULT_SYSTEM,
+                          messages=msgs,
+                      )
+                      # OpenAI-compatible response format
+                      return {
+                          "id": resp.id,
+                          "object": "chat.completion",
+                          "model": resp.model,
+                          "choices": [{
+                              "index": 0,
+                              "message": {
+                                  "role": "assistant",
+                                  "content": resp.content[0].text
+                              },
+                              "finish_reason": resp.stop_reason
+                          }],
+                          "usage": {
+                              "prompt_tokens": resp.usage.input_tokens,
+                              "completion_tokens": resp.usage.output_tokens,
+                              "total_tokens": resp.usage.input_tokens + resp.usage.output_tokens,
+                          }
+                      }
+                  except anthropic.APIError as e:
+                      raise HTTPException(status_code=502, detail=str(e))
+
+              if __name__ == "__main__":
+                  import uvicorn
+                  uvicorn.run(app, host=os.getenv("API_HOST","0.0.0.0"),
+                              port=int(os.getenv("API_PORT","3000")))
+              PYEOF
+              cp -r /app /shared/app
+          volumeMounts:
+            - name: app-code
+              mountPath: /shared
+
+      containers:
+        - name: claude-agent-api
+          image: python:3.12-slim
+          command:
+            - sh
+            - -c
+            - |
+              pip install --quiet anthropic fastapi uvicorn[standard] pydantic httpx
+              python /app/main.py
+          env:
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: claude-api-secret
+                  key: ANTHROPIC_API_KEY
+          envFrom:
+            - configMapRef:
+                name: claude-agent-config
+          ports:
+            - containerPort: 3000
+              name: api
+          volumeMounts:
+            - name: app-code
+              mountPath: /app
+              subPath: app
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+
+      volumes:
+        - name: app-code
+          emptyDir: {}
+---
+# ---- Claude Agent API — Service ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: claude-agent-api
+  namespace: claude-agents
+  labels:
+    app: claude-agent
+    component: api
+spec:
+  type: ClusterIP    # Internal only — Open WebUI routes through this
+  selector:
+    app: claude-agent
+    component: api
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: api
+---
+# ---- Open WebUI — Web interface for Claude agents ----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-webui
+  namespace: claude-agents
+  labels:
+    app: claude-agent
+    component: webui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: claude-agent
+      component: webui
+  template:
+    metadata:
+      labels:
+        app: claude-agent
+        component: webui
+    spec:
+      containers:
+        - name: open-webui
+          image: ghcr.io/open-webui/open-webui:main
+          env:
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: claude-api-secret
+                  key: ANTHROPIC_API_KEY
+          envFrom:
+            - configMapRef:
+                name: claude-agent-config
+          ports:
+            - containerPort: 8080
+              name: webui
+          volumeMounts:
+            - name: data
+              mountPath: /app/backend/data
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 30
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: openwebui-data-pvc
+---
+# ---- Open WebUI — LoadBalancer Service (LAN accessible) ----
+apiVersion: v1
+kind: Service
+metadata:
+  name: open-webui
+  namespace: claude-agents
+  labels:
+    app: claude-agent
+    component: webui
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 192.168.100.31   # MetalLB — adjust if needed
+  selector:
+    app: claude-agent
+    component: webui
+  ports:
+    - port: 80
+      targetPort: 8080
+      name: http

@@ -1,0 +1,195 @@
+---
+# =============================================================================
+# Plex Media Server — K3s Deployment
+# =============================================================================
+# Plex runs as a single container (StatefulSet for stable identity).
+# Media and config are on a HostPath volume — adjust paths to match your
+# PLEX_MEDIA_HOST_PATH and PLEX_CONFIG_HOST_PATH from deploy-cluster.sh.
+#
+# Access: http://<node1-ip>:32400/web  (first-time setup)
+#         Must be accessed from LAN — blocked externally by firewall.
+# =============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: plex-config
+  namespace: plex
+data:
+  PLEX_CLAIM: "claim-REPLACEME"   # Replace or patch via: kubectl patch cm plex-config ...
+  PLEX_UID: "1000"
+  PLEX_GID: "1000"
+  TZ: "America/New_York"           # Set your timezone
+  ADVERTISE_IP: "http://192.168.100.10:32400"  # Adjust to your node1 IP
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: plex-config-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /mnt/plex-config   # Matches PLEX_CONFIG_HOST_PATH on the VM node
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-config-pvc
+  namespace: plex
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: plex-media-pv
+spec:
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /mnt/media    # Matches PLEX_MEDIA_HOST_PATH on the VM node
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-media-pvc
+  namespace: plex
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: plex
+  namespace: plex
+  labels:
+    app: plex
+spec:
+  serviceName: plex
+  replicas: 1
+  selector:
+    matchLabels:
+      app: plex
+  template:
+    metadata:
+      labels:
+        app: plex
+    spec:
+      # Pin to node1 — this is where the media HostPath lives
+      nodeSelector:
+        kubernetes.io/hostname: node1
+
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+
+      containers:
+        - name: plex
+          image: plexinc/pms-docker:latest
+          imagePullPolicy: IfNotPresent
+
+          envFrom:
+            - configMapRef:
+                name: plex-config
+
+          ports:
+            - name: plex
+              containerPort: 32400
+              protocol: TCP
+            - name: dlna-tcp
+              containerPort: 32469
+              protocol: TCP
+            - name: dlna-udp
+              containerPort: 1900
+              protocol: UDP
+            - name: gdm1
+              containerPort: 32410
+              protocol: UDP
+            - name: gdm2
+              containerPort: 32412
+              protocol: UDP
+
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: media
+              mountPath: /data
+            - name: transcode
+              mountPath: /transcode
+
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "2000m"
+
+          livenessProbe:
+            httpGet:
+              path: /identity
+              port: 32400
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 5
+
+          readinessProbe:
+            httpGet:
+              path: /identity
+              port: 32400
+            initialDelaySeconds: 30
+            periodSeconds: 15
+
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: plex-config-pvc
+        - name: media
+          persistentVolumeClaim:
+            claimName: plex-media-pvc
+        - name: transcode
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plex
+  namespace: plex
+  labels:
+    app: plex
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 192.168.100.30   # MetalLB will assign this IP
+  selector:
+    app: plex
+  ports:
+    - name: plex
+      port: 32400
+      targetPort: 32400
+      protocol: TCP
+    - name: dlna-tcp
+      port: 32469
+      targetPort: 32469
+      protocol: TCP

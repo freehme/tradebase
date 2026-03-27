@@ -1,0 +1,25 @@
+---
+# =============================================================================
+# MetalLB — Bare-metal load balancer for K3s
+# Assigns IPs from the cluster subnet for LoadBalancer-type services
+# =============================================================================
+
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: cluster-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    # Range allocated for LoadBalancer services on the cluster network
+    # Keep this outside DHCP range (50-200) and away from static node IPs
+    - 192.168.100.30-192.168.100.49
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: cluster-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - cluster-pool
