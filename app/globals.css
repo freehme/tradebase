@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 20%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 22%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 199 89% 48%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { @apply bg-muted; }
+::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground; }
+
+/* Status badge colors */
+.status-inquiry     { @apply bg-blue-500/20 text-blue-300 border-blue-500/30; }
+.status-assessment  { @apply bg-purple-500/20 text-purple-300 border-purple-500/30; }
+.status-quoted      { @apply bg-yellow-500/20 text-yellow-300 border-yellow-500/30; }
+.status-approved    { @apply bg-emerald-500/20 text-emerald-300 border-emerald-500/30; }
+.status-scheduled   { @apply bg-cyan-500/20 text-cyan-300 border-cyan-500/30; }
+.status-in_progress { @apply bg-orange-500/20 text-orange-300 border-orange-500/30; }
+.status-completed   { @apply bg-green-500/20 text-green-300 border-green-500/30; }
+.status-cancelled   { @apply bg-red-500/20 text-red-300 border-red-500/30; }
+.status-invoiced    { @apply bg-indigo-500/20 text-indigo-300 border-indigo-500/30; }
+.status-paid        { @apply bg-teal-500/20 text-teal-300 border-teal-500/30; }
+
+/* Reusable input style */
+.input-field {
+  @apply h-9 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary;
+}
+
+/* Priority colors */
+.priority-low       { @apply text-slate-400; }
+.priority-medium    { @apply text-yellow-400; }
+.priority-high      { @apply text-orange-400; }
+.priority-emergency { @apply text-red-400 animate-pulse; }

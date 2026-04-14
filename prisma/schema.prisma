@@ -1,0 +1,539 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// USERS & AUTH
+// ─────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  DISPATCHER
+  TECHNICIAN
+  SALES
+  BILLING
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  phone         String?
+  role          UserRole  @default(TECHNICIAN)
+  avatarUrl     String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  assignedJobs      JobAssignment[]
+  communications    Communication[]
+  scheduledSlots    Schedule[]
+  createdInvoices   Invoice[]       @relation("CreatedByUser")
+  createdJobs       Job[]           @relation("CreatedByUser")
+  notes             JobNote[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// CUSTOMERS
+// ─────────────────────────────────────────────
+
+enum CustomerType {
+  RESIDENTIAL
+  COMMERCIAL
+  PROPERTY_MANAGER
+  GENERAL_CONTRACTOR
+}
+
+model Customer {
+  id              String        @id @default(cuid())
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String
+  altPhone        String?
+  customerType    CustomerType  @default(RESIDENTIAL)
+  company         String?
+  // Address
+  street          String?
+  city            String?
+  state           String?
+  zip             String?
+  latitude        Float?
+  longitude       Float?
+  // Records
+  parcelNumber    String?
+  countyRecordUrl String?
+  notes           String?
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  jobs            Job[]
+  communications  Communication[]
+  invoices        Invoice[]
+
+  @@map("customers")
+}
+
+// ─────────────────────────────────────────────
+// COMMUNICATIONS (calls, texts, emails)
+// ─────────────────────────────────────────────
+
+enum CommChannel {
+  PHONE_INBOUND
+  PHONE_OUTBOUND
+  SMS_INBOUND
+  SMS_OUTBOUND
+  EMAIL_INBOUND
+  EMAIL_OUTBOUND
+}
+
+enum CommStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  MISSED
+  VOICEMAIL
+}
+
+model Communication {
+  id            String      @id @default(cuid())
+  channel       CommChannel
+  status        CommStatus  @default(PENDING)
+  fromNumber    String?
+  toNumber      String?
+  fromEmail     String?
+  toEmail       String?
+  subject       String?
+  body          String?
+  duration      Int?        // seconds for calls
+  recordingUrl  String?
+  twilioSid     String?
+  handledById   String?
+  customerId    String?
+  jobId         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  handledBy     User?       @relation(fields: [handledById], references: [id])
+  customer      Customer?   @relation(fields: [customerId], references: [id])
+  job           Job?        @relation(fields: [jobId], references: [id])
+
+  @@map("communications")
+}
+
+// ─────────────────────────────────────────────
+// JOBS / PROJECTS
+// ─────────────────────────────────────────────
+
+enum JobType {
+  REPAIR
+  RENOVATION
+  NEW_CONSTRUCTION
+  INSPECTION
+  ESTIMATE
+  MAINTENANCE
+  EMERGENCY
+}
+
+enum JobStatus {
+  INQUIRY
+  ASSESSMENT
+  QUOTED
+  APPROVED
+  SCHEDULED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+  INVOICED
+  PAID
+}
+
+enum JobPriority {
+  LOW
+  MEDIUM
+  HIGH
+  EMERGENCY
+}
+
+model Job {
+  id                String       @id @default(cuid())
+  jobNumber         String       @unique
+  title             String
+  description       String?
+  jobType           JobType      @default(REPAIR)
+  status            JobStatus    @default(INQUIRY)
+  priority          JobPriority  @default(MEDIUM)
+  customerId        String
+  createdById       String
+  // Location
+  street            String?
+  city              String?
+  state             String?
+  zip               String?
+  latitude          Float?
+  longitude         Float?
+  locationVerified  Boolean      @default(false)
+  // Property info from public records
+  parcelNumber      String?
+  propertyType      String?
+  yearBuilt         Int?
+  sqFootage         Int?
+  countyData        Json?
+  // Assessment
+  estimatedHours    Float?
+  actualHours       Float?
+  estimatedCost     Float?
+  actualCost        Float?
+  // Dates
+  requestedDate     DateTime?
+  scheduledStart    DateTime?
+  scheduledEnd      DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  customer          Customer     @relation(fields: [customerId], references: [id])
+  createdBy         User         @relation("CreatedByUser", fields: [createdById], references: [id])
+  assignments       JobAssignment[]
+  attachments       Attachment[]
+  notes             JobNote[]
+  communications    Communication[]
+  schedules         Schedule[]
+  invoice           Invoice?
+  assessment        Assessment?
+  lineItems         JobLineItem[]
+
+  @@map("jobs")
+}
+
+model JobAssignment {
+  id          String    @id @default(cuid())
+  jobId       String
+  userId      String
+  role        String?   // lead, helper, specialist
+  hoursLogged Float     @default(0)
+  assignedAt  DateTime  @default(now())
+
+  job         Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@unique([jobId, userId])
+  @@map("job_assignments")
+}
+
+model JobLineItem {
+  id          String    @id @default(cuid())
+  jobId       String
+  description String
+  category    String?   // labor, materials, equipment, subcontractor
+  quantity    Float     @default(1)
+  unitPrice   Float
+  total       Float
+  createdAt   DateTime  @default(now())
+
+  job         Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("job_line_items")
+}
+
+model JobNote {
+  id          String    @id @default(cuid())
+  jobId       String
+  authorId    String
+  content     String
+  isInternal  Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  job         Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  author      User      @relation(fields: [authorId], references: [id])
+
+  @@map("job_notes")
+}
+
+// ─────────────────────────────────────────────
+// AI ASSESSMENT
+// ─────────────────────────────────────────────
+
+model Assessment {
+  id                  String    @id @default(cuid())
+  jobId               String    @unique
+  aiSummary           String?
+  scopeOfWork         String?
+  estimatedHours      Float?
+  laborBreakdown      Json?     // { plumber: 4, electrician: 2, general: 8 }
+  materialsList       Json?
+  riskFactors         String?
+  recommendedTrades   Json?
+  confidenceScore     Float?
+  propertyRecordData  Json?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  job                 Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("assessments")
+}
+
+// ─────────────────────────────────────────────
+// FILE ATTACHMENTS
+// ─────────────────────────────────────────────
+
+enum AttachmentType {
+  PHOTO
+  VIDEO
+  DOCUMENT
+  FLOOR_PLAN
+  PERMIT
+  OTHER
+}
+
+model Attachment {
+  id            String          @id @default(cuid())
+  jobId         String
+  fileName      String
+  fileType      AttachmentType  @default(PHOTO)
+  mimeType      String
+  sizeBytes     Int
+  storageUrl    String
+  thumbnailUrl  String?
+  uploadedAt    DateTime        @default(now())
+
+  job           Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+// ─────────────────────────────────────────────
+// SCHEDULING
+// ─────────────────────────────────────────────
+
+enum ScheduleStatus {
+  TENTATIVE
+  CONFIRMED
+  EN_ROUTE
+  ON_SITE
+  COMPLETED
+  NO_SHOW
+  RESCHEDULED
+}
+
+model Schedule {
+  id              String          @id @default(cuid())
+  jobId           String
+  technicianId    String
+  status          ScheduleStatus  @default(TENTATIVE)
+  scheduledStart  DateTime
+  scheduledEnd    DateTime
+  actualStart     DateTime?
+  actualEnd       DateTime?
+  // Location confirmation
+  confirmedAddress String?
+  confirmedLat     Float?
+  confirmedLng     Float?
+  customerConfirmed Boolean       @default(false)
+  arrivalWindow   Int             @default(60) // minutes
+  travelMinutes   Int?
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  job             Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  technician      User            @relation(fields: [technicianId], references: [id])
+
+  @@map("schedules")
+}
+
+// ─────────────────────────────────────────────
+// INVENTORY
+// ─────────────────────────────────────────────
+
+enum InventoryCategory {
+  PLUMBING
+  ELECTRICAL
+  HVAC
+  CARPENTRY
+  CONCRETE
+  ROOFING
+  PAINTING
+  HARDWARE
+  TOOLS
+  SAFETY
+  OTHER
+}
+
+model InventoryItem {
+  id              String            @id @default(cuid())
+  sku             String            @unique
+  name            String
+  description     String?
+  category        InventoryCategory @default(OTHER)
+  unit            String            @default("each")
+  quantityOnHand  Float             @default(0)
+  quantityReserved Float            @default(0)
+  reorderPoint    Float             @default(0)
+  reorderQty      Float             @default(0)
+  unitCost        Float
+  unitPrice       Float
+  supplier        String?
+  supplierSku     String?
+  location        String?           // bin/shelf location
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  transactions    InventoryTransaction[]
+
+  @@map("inventory_items")
+}
+
+enum TransactionType {
+  PURCHASE
+  USE
+  RETURN
+  ADJUSTMENT
+  TRANSFER
+}
+
+model InventoryTransaction {
+  id          String          @id @default(cuid())
+  itemId      String
+  type        TransactionType
+  quantity    Float
+  unitCost    Float?
+  jobId       String?
+  reference   String?
+  notes       String?
+  createdAt   DateTime        @default(now())
+
+  item        InventoryItem   @relation(fields: [itemId], references: [id])
+
+  @@map("inventory_transactions")
+}
+
+// ─────────────────────────────────────────────
+// BILLING & INVOICES
+// ─────────────────────────────────────────────
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  VIEWED
+  PARTIAL
+  PAID
+  OVERDUE
+  VOIDED
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  invoiceNumber   String        @unique
+  jobId           String        @unique
+  customerId      String
+  createdById     String
+  status          InvoiceStatus @default(DRAFT)
+  issueDate       DateTime      @default(now())
+  dueDate         DateTime
+  subtotal        Float
+  taxRate         Float         @default(0)
+  taxAmount       Float         @default(0)
+  discount        Float         @default(0)
+  total           Float
+  amountPaid      Float         @default(0)
+  balanceDue      Float
+  notes           String?
+  termsConditions String?
+  sentAt          DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  job             Job           @relation(fields: [jobId], references: [id])
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  createdBy       User          @relation("CreatedByUser", fields: [createdById], references: [id])
+  lineItems       InvoiceLineItem[]
+  payments        Payment[]
+
+  @@map("invoices")
+}
+
+model InvoiceLineItem {
+  id          String    @id @default(cuid())
+  invoiceId   String
+  description String
+  category    String?
+  quantity    Float     @default(1)
+  unitPrice   Float
+  total       Float
+
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_line_items")
+}
+
+model Payment {
+  id            String    @id @default(cuid())
+  invoiceId     String
+  amount        Float
+  method        String    // cash, check, card, ach, zelle
+  reference     String?
+  notes         String?
+  paidAt        DateTime  @default(now())
+
+  invoice       Invoice   @relation(fields: [invoiceId], references: [id])
+
+  @@map("payments")
+}
+
+// ─────────────────────────────────────────────
+// BUDGETING
+// ─────────────────────────────────────────────
+
+enum BudgetPeriod {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+  PROJECT
+}
+
+model Budget {
+  id          String        @id @default(cuid())
+  name        String
+  period      BudgetPeriod  @default(MONTHLY)
+  startDate   DateTime
+  endDate     DateTime
+  totalBudget Float
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  categories  BudgetCategory[]
+
+  @@map("budgets")
+}
+
+model BudgetCategory {
+  id          String    @id @default(cuid())
+  budgetId    String
+  name        String
+  allocated   Float
+  spent       Float     @default(0)
+  notes       String?
+
+  budget      Budget    @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  @@map("budget_categories")
+}
