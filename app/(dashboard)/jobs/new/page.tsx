@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
   Wrench, Home, Building2, MapPin, Clock, Brain,
   Upload, X, CheckCircle, AlertTriangle, ArrowRight,
-  RefreshCw, FileText, Camera,
+  RefreshCw, FileText, Camera, Image as ImageIcon, File as FileIcon,
 } from 'lucide-react'
+
+type UploadedFile = { name: string; url: string; size: number; type: string; preview?: string }
 
 type Step = 'customer' | 'location' | 'job-type' | 'assessment' | 'schedule'
 
@@ -40,10 +42,46 @@ export default function NewJobPage() {
   const [jobType, setJobType] = useState('')
   const [trades, setTrades] = useState<string[]>([])
   const [description, setDescription] = useState('')
-  const [files, setFiles] = useState<File[]>([])
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
   const [assessed, setAssessed] = useState(false)
   const [assessing, setAssessing] = useState(false)
   const [locationVerified, setLocationVerified] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileSelect = useCallback(async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return
+    setUploading(true)
+    setUploadError('')
+
+    const form = new FormData()
+    const localPreviews: string[] = []
+
+    for (const file of Array.from(fileList)) {
+      form.append('files', file)
+      if (file.type.startsWith('image/')) {
+        localPreviews.push(URL.createObjectURL(file))
+      } else {
+        localPreviews.push('')
+      }
+    }
+
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: form })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Upload failed')
+
+      setUploadedFiles(prev => [
+        ...prev,
+        ...data.files.map((f: UploadedFile, i: number) => ({ ...f, preview: localPreviews[i] })),
+      ])
+    } catch (e: unknown) {
+      setUploadError(e instanceof Error ? e.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }, [])
 
   const steps: Step[] = ['customer', 'location', 'job-type', 'assessment', 'schedule']
   const stepIdx = steps.indexOf(step)
@@ -260,16 +298,95 @@ export default function NewJobPage() {
             </div>
 
             {/* File upload */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground">Photos / Files</label>
-              <div className="relative rounded-xl border-2 border-dashed border-border p-6 text-center">
-                <Camera className="mx-auto h-8 w-8 text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground">Drop photos, videos, or documents here</p>
-                <p className="text-xs text-muted-foreground">PNG, JPG, PDF, MP4 up to 100MB each</p>
-                <Button size="sm" variant="outline" className="mt-3 gap-1.5">
-                  <Upload className="h-3.5 w-3.5" /> Browse Files
-                </Button>
+
+              {/* Drop zone */}
+              <div
+                className="relative rounded-xl border-2 border-dashed border-border p-6 text-center transition-colors hover:border-primary/50"
+                onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add('border-primary', 'bg-primary/5') }}
+                onDragLeave={e => { e.currentTarget.classList.remove('border-primary', 'bg-primary/5') }}
+                onDrop={e => {
+                  e.preventDefault()
+                  e.currentTarget.classList.remove('border-primary', 'bg-primary/5')
+                  handleFileSelect(e.dataTransfer.files)
+                }}
+              >
+                {uploading ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Uploading...</p>
+                  </div>
+                ) : (
+                  <>
+                    <Camera className="mx-auto h-8 w-8 text-muted-foreground" />
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Drag & drop photos or documents here
+                    </p>
+                    <p className="text-xs text-muted-foreground">PNG, JPG, PDF up to 20MB each</p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*,.pdf"
+                      className="hidden"
+                      onChange={e => handleFileSelect(e.target.files)}
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-3 gap-1.5"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="h-3.5 w-3.5" /> Browse Files
+                    </Button>
+                  </>
+                )}
               </div>
+
+              {uploadError && (
+                <p className="text-xs text-red-400">{uploadError}</p>
+              )}
+
+              {/* Uploaded file previews */}
+              {uploadedFiles.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {uploadedFiles.map((f, i) => (
+                    <div key={i} className="relative group rounded-lg border border-border overflow-hidden bg-muted">
+                      {f.preview ? (
+                        <img
+                          src={f.preview}
+                          alt={f.name}
+                          className="h-24 w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-24 items-center justify-center">
+                          <FileIcon className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 bg-black/60 px-2 py-1">
+                        <p className="truncate text-[10px] text-white">{f.name}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setUploadedFiles(fs => fs.filter((_, j) => j !== i))}
+                        className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {/* Add more button */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-border text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                  >
+                    <Upload className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3">
