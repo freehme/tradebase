@@ -13,37 +13,37 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 
 const JOBS = [
   {
-    id: 'JOB-26-10021', title: 'Kitchen Pipe Burst', type: 'REPAIR', status: 'IN_PROGRESS', priority: 'EMERGENCY',
+    id: 'JOB-26-10021', title: 'Kitchen P-Trap Leak', type: 'REPAIR', status: 'IN_PROGRESS', priority: 'EMERGENCY',
     customer: 'Maria Santos', address: '412 Oak St, Phoenix AZ 85001',
-    estimatedHours: 4, estimatedCost: 2400, scheduledStart: new Date(),
+    estimatedHours: 1.5, estimatedCost: 340, scheduledStart: new Date(),
     tech: 'Carlos M.', createdAt: new Date(Date.now() - 2 * 3600000),
   },
   {
-    id: 'JOB-26-10020', title: 'Master Bath Renovation', type: 'RENOVATION', status: 'SCHEDULED', priority: 'MEDIUM',
+    id: 'JOB-26-10020', title: 'Master Bath Full Re-pipe', type: 'RENOVATION', status: 'SCHEDULED', priority: 'MEDIUM',
     customer: 'Tom Reeves', address: '88 Maple Ave, Scottsdale AZ 85251',
-    estimatedHours: 120, estimatedCost: 18500, scheduledStart: new Date(Date.now() + 2 * 86400000),
+    estimatedHours: 14, estimatedCost: 4800, scheduledStart: new Date(Date.now() + 2 * 86400000),
     tech: 'Dana L.', createdAt: new Date(Date.now() - 5 * 86400000),
   },
   {
-    id: 'JOB-26-10019', title: 'Panel Upgrade 200A', type: 'REPAIR', status: 'QUOTED', priority: 'HIGH',
+    id: 'JOB-26-10019', title: 'Main Line Hydro-Jetting', type: 'REPAIR', status: 'QUOTED', priority: 'HIGH',
     customer: 'ABC Rentals LLC', address: '1200 Commerce Dr, Tempe AZ 85281',
-    estimatedHours: 8, estimatedCost: 3200, scheduledStart: null,
+    estimatedHours: 3, estimatedCost: 1100, scheduledStart: null,
     tech: null, createdAt: new Date(Date.now() - 1 * 86400000),
   },
   {
-    id: 'JOB-26-10018', title: 'HVAC Full Replacement', type: 'REPAIR', status: 'ASSESSMENT', priority: 'MEDIUM',
+    id: 'JOB-26-10018', title: 'Water Heater Leak Assessment', type: 'REPAIR', status: 'ASSESSMENT', priority: 'MEDIUM',
     customer: 'Jennifer Park', address: '55 Birch Ln, Mesa AZ 85201',
     estimatedHours: null, estimatedCost: null, scheduledStart: null,
     tech: null, createdAt: new Date(Date.now() - 3 * 3600000),
   },
   {
-    id: 'JOB-26-10017', title: 'Roof Repair Section B', type: 'REPAIR', status: 'COMPLETED', priority: 'LOW',
+    id: 'JOB-26-10017', title: 'Sewer Line Camera Scope', type: 'INSPECTION', status: 'COMPLETED', priority: 'LOW',
     customer: 'Westside HOA', address: '900 River Rd, Glendale AZ 85301',
-    estimatedHours: 16, estimatedCost: 6700, scheduledStart: new Date(Date.now() - 1 * 86400000),
-    tech: 'Phil T.', createdAt: new Date(Date.now() - 7 * 86400000),
+    estimatedHours: 2, estimatedCost: 650, scheduledStart: new Date(Date.now() - 1 * 86400000),
+    tech: 'Carlos M.', createdAt: new Date(Date.now() - 7 * 86400000),
   },
   {
-    id: 'JOB-26-10016', title: 'Bathroom Tile Work', type: 'RENOVATION', status: 'INQUIRY', priority: 'LOW',
+    id: 'JOB-26-10016', title: 'Bathroom Drain Clog', type: 'REPAIR', status: 'INQUIRY', priority: 'LOW',
     customer: 'Sandra Kim', address: '22 Elm St, Chandler AZ 85224',
     estimatedHours: null, estimatedCost: null, scheduledStart: null,
     tech: null, createdAt: new Date(Date.now() - 30 * 60000),

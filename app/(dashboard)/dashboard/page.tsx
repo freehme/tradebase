@@ -53,11 +53,11 @@ const stats = [
 ]
 
 const recentJobs = [
-  { id: 'JOB-26-10021', title: 'Kitchen Pipe Burst', customer: 'Maria Santos', status: 'IN_PROGRESS', priority: 'EMERGENCY', est: '$2,400', type: 'REPAIR' },
-  { id: 'JOB-26-10020', title: 'Master Bath Renovation', customer: 'Tom Reeves', status: 'SCHEDULED', priority: 'MEDIUM', est: '$18,500', type: 'RENOVATION' },
-  { id: 'JOB-26-10019', title: 'Panel Upgrade 200A', customer: 'ABC Rentals LLC', status: 'QUOTED', priority: 'HIGH', est: '$3,200', type: 'REPAIR' },
-  { id: 'JOB-26-10018', title: 'HVAC Full Replacement', customer: 'Jennifer Park', status: 'ASSESSMENT', priority: 'MEDIUM', est: '—', type: 'REPAIR' },
-  { id: 'JOB-26-10017', title: 'Roof Repair Section B', customer: 'Westside HOA', status: 'COMPLETED', priority: 'LOW', est: '$6,700', type: 'REPAIR' },
+  { id: 'JOB-26-10021', title: 'Kitchen P-Trap Leak',    customer: 'Maria Santos',    status: 'IN_PROGRESS', priority: 'EMERGENCY', est: '$340',    type: 'REPAIR' },
+  { id: 'JOB-26-10020', title: 'Master Bath Re-pipe',    customer: 'Tom Reeves',      status: 'SCHEDULED',   priority: 'MEDIUM',    est: '$4,800',  type: 'RENOVATION' },
+  { id: 'JOB-26-10019', title: 'Main Line Hydro-Jet',    customer: 'ABC Rentals LLC', status: 'QUOTED',      priority: 'HIGH',      est: '$1,100',  type: 'REPAIR' },
+  { id: 'JOB-26-10018', title: 'Water Heater Leak Assess', customer: 'Jennifer Park', status: 'ASSESSMENT',  priority: 'MEDIUM',    est: '—',       type: 'REPAIR' },
+  { id: 'JOB-26-10017', title: 'Sewer Line Camera Scope', customer: 'Westside HOA',   status: 'COMPLETED',   priority: 'LOW',       est: '$650',    type: 'INSPECTION' },
 ]
 
 const upcomingSchedule = [

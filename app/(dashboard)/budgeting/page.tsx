@@ -6,15 +6,15 @@ import { TrendingUp, TrendingDown, Plus, DollarSign } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
 const BUDGET_CATEGORIES = [
-  { name: 'Labor — Plumbing',     allocated: 45000, spent: 38200, color: '#3b82f6' },
-  { name: 'Labor — Electrical',   allocated: 32000, spent: 29100, color: '#8b5cf6' },
-  { name: 'Labor — HVAC',         allocated: 28000, spent: 22500, color: '#10b981' },
-  { name: 'Labor — General',      allocated: 40000, spent: 35800, color: '#f59e0b' },
-  { name: 'Materials',            allocated: 55000, spent: 48900, color: '#ef4444' },
-  { name: 'Equipment Rental',     allocated: 12000, spent: 8400,  color: '#06b6d4' },
-  { name: 'Subcontractors',       allocated: 30000, spent: 31500, color: '#f97316' },
-  { name: 'Vehicle & Fuel',       allocated: 8000,  spent: 6200,  color: '#84cc16' },
-  { name: 'Overhead',             allocated: 15000, spent: 13100, color: '#64748b' },
+  { name: 'Labor — Plumbing',      allocated: 68000, spent: 58200, color: '#3b82f6' },
+  { name: 'Labor — Drain / Sewer', allocated: 32000, spent: 29100, color: '#8b5cf6' },
+  { name: 'Labor — Pipe Fitting',  allocated: 28000, spent: 24500, color: '#10b981' },
+  { name: 'Labor — Apprentice',    allocated: 22000, spent: 19800, color: '#f59e0b' },
+  { name: 'Materials & Fittings',  allocated: 55000, spent: 48900, color: '#ef4444' },
+  { name: 'Equipment Rental',      allocated: 12000, spent: 8400,  color: '#06b6d4' },
+  { name: 'Subcontractors',        allocated: 18000, spent: 19500, color: '#f97316' },
+  { name: 'Vehicle & Fuel',        allocated: 9000,  spent: 7200,  color: '#84cc16' },
+  { name: 'Overhead',              allocated: 15000, spent: 13100, color: '#64748b' },
 ]
 
 const MONTHLY = [

@@ -13,41 +13,41 @@ import { formatDate } from '@/lib/utils'
 const HOURS = Array.from({ length: 11 }, (_, i) => i + 7) // 7am–5pm
 
 const TECHS = [
-  { id: 't1', name: 'Carlos M.',  trade: 'Plumbing',    color: 'bg-blue-500' },
-  { id: 't2', name: 'Dana L.',    trade: 'Plumbing',    color: 'bg-indigo-500' },
-  { id: 't3', name: 'Phil T.',    trade: 'Electrical',  color: 'bg-yellow-500' },
-  { id: 't4', name: 'Amy J.',     trade: 'HVAC',        color: 'bg-emerald-500' },
-  { id: 't5', name: 'Sam K.',     trade: 'General',     color: 'bg-purple-500' },
-  { id: 't6', name: 'Rick O.',    trade: 'Roofing',     color: 'bg-orange-500' },
+  { id: 't1', name: 'Carlos M.',  trade: 'Plumbing',         color: 'bg-blue-500' },
+  { id: 't2', name: 'Dana L.',    trade: 'Plumbing',         color: 'bg-indigo-500' },
+  { id: 't3', name: 'Phil T.',    trade: 'Plumbing',         color: 'bg-cyan-500' },
+  { id: 't4', name: 'Amy J.',     trade: 'Drain Specialist', color: 'bg-emerald-500' },
+  { id: 't5', name: 'Sam K.',     trade: 'Plumbing',         color: 'bg-purple-500' },
+  { id: 't6', name: 'Rick O.',    trade: 'Pipe Fitting',     color: 'bg-orange-500' },
 ]
 
 const JOBS_TODAY = [
   {
-    id: 'JOB-26-10021', title: 'Kitchen Pipe Burst', customer: 'Maria Santos',
-    address: '412 Oak St, Phoenix', techId: 't1', startHour: 8, durationHours: 4,
+    id: 'JOB-26-10021', title: 'Kitchen P-Trap Leak', customer: 'Maria Santos',
+    address: '412 Oak St, Phoenix', techId: 't1', startHour: 8, durationHours: 1.5,
     status: 'ON_SITE', priority: 'EMERGENCY', phone: '(602) 555-0182',
     lat: 33.45, lng: -112.07,
   },
   {
-    id: 'JOB-26-10015', title: 'Water Heater Replace', customer: 'Bob Chen',
+    id: 'JOB-26-10015', title: 'Water Heater Replacement', customer: 'Bob Chen',
     address: '88 Maple Ave, Scottsdale', techId: 't2', startHour: 9, durationHours: 3,
     status: 'EN_ROUTE', priority: 'HIGH', phone: '(480) 555-0234',
     lat: 33.49, lng: -111.93,
   },
   {
-    id: 'JOB-26-10019', title: 'Panel Upgrade 200A', customer: 'ABC Rentals',
-    address: '1200 Commerce Dr, Tempe', techId: 't3', startHour: 11, durationHours: 6,
+    id: 'JOB-26-10019', title: 'Main Line Hydro-Jetting', customer: 'ABC Rentals',
+    address: '1200 Commerce Dr, Tempe', techId: 't3', startHour: 11, durationHours: 3,
     status: 'CONFIRMED', priority: 'HIGH', phone: '(623) 555-0091',
     lat: 33.43, lng: -111.94,
   },
   {
-    id: 'JOB-26-10018', title: 'HVAC Assessment', customer: 'Jennifer Park',
+    id: 'JOB-26-10018', title: 'Water Heater Leak Assess', customer: 'Jennifer Park',
     address: '55 Birch Ln, Mesa', techId: 't4', startHour: 13, durationHours: 2,
     status: 'CONFIRMED', priority: 'MEDIUM', phone: '(480) 555-0501',
     lat: 33.42, lng: -111.83,
   },
   {
-    id: 'JOB-26-10022', title: 'Roof Patch', customer: 'Westside HOA',
+    id: 'JOB-26-10022', title: 'Slab Leak Detection', customer: 'Westside HOA',
     address: '900 River Rd, Glendale', techId: 't6', startHour: 15, durationHours: 2.5,
     status: 'TENTATIVE', priority: 'LOW', phone: '(623) 555-0050',
     lat: 33.53, lng: -112.19,

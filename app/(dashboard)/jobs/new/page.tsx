@@ -28,26 +28,36 @@ const TRADE_TYPES = [
 ]
 
 const AI_ASSESSMENT = {
-  summary: 'Based on the description of water overflowing from the kitchen sink and the property built in 1987, this is likely a blocked main drain or failed P-trap. Given the property age, cast iron drain lines may have corrosion buildup.',
-  scopeOfWork: '1. Inspect P-trap and drain assembly under sink\n2. Snake main drain line (up to 50ft)\n3. Camera inspection of cast iron line if blockage persists\n4. Replace P-trap assembly if corroded',
-  estimatedHours: 3.5,
-  laborBreakdown: { 'Licensed Plumber': 3.5, 'Helper': 1 },
-  riskFactors: 'Cast iron drain lines common in pre-1990 construction may require full replacement ($2,800–$8,500 additional)',
-  confidence: 82,
-  materials: ['P-trap assembly kit', 'Drain snake rental or company equipment', 'PVC fittings (if replacement needed)'],
+  summary: 'Based on the photo and description, the slip-joint nut on the P-trap has failed — likely due to corrosion on the 1987 chrome drain assembly. Water is actively pooling in the cabinet. Immediate repair needed to prevent subfloor damage.',
+  scopeOfWork: '1. Remove existing P-trap assembly and inspect all slip-joint connections\n2. Check for subfloor moisture or damage beneath cabinet\n3. Install new 1-1/2" PVC P-trap with compression fittings\n4. Test all connections under full flow for 5 minutes\n5. Document with photos for customer record',
+  estimatedHours: 1.5,
+  laborBreakdown: { 'Licensed Plumber': 1.5 },
+  riskFactors: 'Cabinet subfloor may have moisture damage if leak has been ongoing — inspect and replace if soft ($180–$420 additional). Chrome drain line above P-trap shows corrosion and may need replacement.',
+  confidence: 91,
+  materials: ['1-1/2" PVC P-trap assembly', 'Slip-joint washers (assorted)', 'Plumber\'s putty', 'Teflon tape', 'PVC primer & cement'],
 }
+
+const DEMO_FILES: UploadedFile[] = [
+  {
+    name: 'sink-pipe-leak.svg',
+    url: '/demo-pipe-leak.svg',
+    size: 4200,
+    type: 'image/svg+xml',
+    preview: '/demo-pipe-leak.svg',
+  },
+]
 
 export default function NewJobPage() {
   const [step, setStep] = useState<Step>('customer')
-  const [jobType, setJobType] = useState('')
-  const [trades, setTrades] = useState<string[]>([])
-  const [description, setDescription] = useState('')
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+  const [jobType, setJobType] = useState('REPAIR')
+  const [trades, setTrades] = useState<string[]>(['Plumbing'])
+  const [description, setDescription] = useState('Water leaking from slip joint under kitchen sink — P-trap connection is loose/corroded. Water pooling in cabinet. Property built 1987.')
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(DEMO_FILES)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [assessed, setAssessed] = useState(false)
   const [assessing, setAssessing] = useState(false)
-  const [locationVerified, setLocationVerified] = useState(false)
+  const [locationVerified, setLocationVerified] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = useCallback(async (fileList: FileList | null) => {

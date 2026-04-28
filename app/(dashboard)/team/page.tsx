@@ -8,12 +8,12 @@ import { Search, Plus, Phone, Mail } from 'lucide-react'
 import { formatPhone } from '@/lib/utils'
 
 const TEAM = [
-  { id: 'u1', name: 'Carlos Martinez',  role: 'TECHNICIAN', trade: 'Plumbing',   phone: '6025551001', email: 'carlos@tradebase.co',  status: 'ON_SITE',    activeJob: 'JOB-26-10021', rate: 45 },
-  { id: 'u2', name: 'Dana Lee',         role: 'TECHNICIAN', trade: 'Plumbing',   phone: '4805551002', email: 'dana@tradebase.co',    status: 'EN_ROUTE',   activeJob: 'JOB-26-10015', rate: 45 },
-  { id: 'u3', name: 'Phil Torres',      role: 'TECHNICIAN', trade: 'Electrical', phone: '6235551003', email: 'phil@tradebase.co',    status: 'AVAILABLE',  activeJob: null,           rate: 50 },
-  { id: 'u4', name: 'Amy Johnson',      role: 'TECHNICIAN', trade: 'HVAC',       phone: '4805551004', email: 'amy@tradebase.co',     status: 'ON_SITE',    activeJob: 'JOB-26-10018', rate: 48 },
-  { id: 'u5', name: 'Sam Kim',          role: 'TECHNICIAN', trade: 'General',    phone: '6025551005', email: 'sam@tradebase.co',     status: 'AVAILABLE',  activeJob: null,           rate: 38 },
-  { id: 'u6', name: 'Rick Ortiz',       role: 'TECHNICIAN', trade: 'Roofing',    phone: '6235551006', email: 'rick@tradebase.co',    status: 'EN_ROUTE',   activeJob: 'JOB-26-10022', rate: 42 },
+  { id: 'u1', name: 'Carlos Martinez',  role: 'TECHNICIAN', trade: 'Plumbing',         phone: '6025551001', email: 'carlos@tradebase.co',  status: 'ON_SITE',    activeJob: 'JOB-26-10021', rate: 52 },
+  { id: 'u2', name: 'Dana Lee',         role: 'TECHNICIAN', trade: 'Plumbing',         phone: '4805551002', email: 'dana@tradebase.co',    status: 'EN_ROUTE',   activeJob: 'JOB-26-10015', rate: 48 },
+  { id: 'u3', name: 'Phil Torres',      role: 'TECHNICIAN', trade: 'Plumbing',         phone: '6235551003', email: 'phil@tradebase.co',    status: 'AVAILABLE',  activeJob: null,           rate: 46 },
+  { id: 'u4', name: 'Amy Johnson',      role: 'TECHNICIAN', trade: 'Drain Specialist', phone: '4805551004', email: 'amy@tradebase.co',     status: 'ON_SITE',    activeJob: 'JOB-26-10018', rate: 50 },
+  { id: 'u5', name: 'Sam Kim',          role: 'TECHNICIAN', trade: 'Plumbing',         phone: '6025551005', email: 'sam@tradebase.co',     status: 'AVAILABLE',  activeJob: null,           rate: 44 },
+  { id: 'u6', name: 'Rick Ortiz',       role: 'TECHNICIAN', trade: 'Pipe Fitting',     phone: '6235551006', email: 'rick@tradebase.co',    status: 'EN_ROUTE',   activeJob: 'JOB-26-10022', rate: 46 },
   { id: 'u7', name: 'Grace Wu',         role: 'DISPATCHER', trade: null,         phone: '4805551007', email: 'grace@tradebase.co',   status: 'OFFICE',     activeJob: null,           rate: 35 },
   { id: 'u8', name: 'Marcus Allen',     role: 'MANAGER',    trade: null,         phone: '6025551008', email: 'marcus@tradebase.co',  status: 'OFFICE',     activeJob: null,           rate: 65 },
 ]

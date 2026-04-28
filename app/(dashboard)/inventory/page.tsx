@@ -7,17 +7,17 @@ import { Button } from '@/components/ui/button'
 import { Search, Plus, AlertTriangle, TrendingDown, Package, ArrowUpDown } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
-type Category = 'ALL' | 'PLUMBING' | 'ELECTRICAL' | 'HVAC' | 'CARPENTRY' | 'HARDWARE' | 'TOOLS'
+type Category = 'ALL' | 'PLUMBING' | 'TOOLS' | 'HARDWARE' | 'ELECTRICAL' | 'HVAC' | 'CARPENTRY'
 
 const ITEMS = [
-  { id: 'I001', sku: 'PLM-PVC-075', name: 'PVC Pipe 3/4" (10ft)', cat: 'PLUMBING',   unit: 'each', qty: 2,  reserved: 2,  reorderPt: 10, unitCost: 4.50,  unitPrice: 9.00,   supplier: 'Ferguson' },
-  { id: 'I002', sku: 'ELC-BRK-020', name: '20A Circuit Breaker',  cat: 'ELECTRICAL', unit: 'each', qty: 5,  reserved: 1,  reorderPt: 12, unitCost: 8.25,  unitPrice: 18.00,  supplier: 'Graybar' },
-  { id: 'I003', sku: 'DRY-SHT-4x8', name: 'Drywall 4x8 Sheet',   cat: 'CARPENTRY',  unit: 'sheet',qty: 8,  reserved: 4,  reorderPt: 20, unitCost: 12.00, unitPrice: 24.00,  supplier: 'Home Depot' },
-  { id: 'I004', sku: 'HVC-FLT-2025', name: 'HVAC Filter 20x25',  cat: 'HVAC',       unit: 'each', qty: 0,  reserved: 0,  reorderPt: 15, unitCost: 6.00,  unitPrice: 14.00,  supplier: 'Johnstone' },
-  { id: 'I005', sku: 'PLM-PTR-075', name: 'P-Trap Assembly 3/4"', cat: 'PLUMBING',   unit: 'each', qty: 24, reserved: 3,  reorderPt: 10, unitCost: 7.50,  unitPrice: 18.00,  supplier: 'Ferguson' },
-  { id: 'I006', sku: 'ELC-WIR-12G', name: 'Wire 12 Gauge (100ft)',cat: 'ELECTRICAL', unit: 'roll', qty: 15, reserved: 2,  reorderPt: 8,  unitCost: 42.00, unitPrice: 85.00,  supplier: 'Graybar' },
-  { id: 'I007', sku: 'HDW-SCR-3in', name: 'Deck Screws 3" (1lb)', cat: 'HARDWARE',   unit: 'box',  qty: 45, reserved: 0,  reorderPt: 20, unitCost: 3.25,  unitPrice: 7.50,   supplier: 'Home Depot' },
-  { id: 'I008', sku: 'TLS-DRL-COR', name: 'Cordless Drill 18V',   cat: 'TOOLS',      unit: 'each', qty: 8,  reserved: 3,  reorderPt: 4,  unitCost: 85.00, unitPrice: 0,      supplier: 'Makita' },
+  { id: 'I001', sku: 'PLM-PVC-075',  name: 'PVC Pipe 3/4" (10ft)',      cat: 'PLUMBING', unit: 'each',  qty: 2,  reserved: 2,  reorderPt: 10, unitCost: 4.50,   unitPrice: 9.00,   supplier: 'Ferguson' },
+  { id: 'I002', sku: 'PLM-PTR-112',  name: 'P-Trap Assembly 1-1/2"',    cat: 'PLUMBING', unit: 'each',  qty: 3,  reserved: 1,  reorderPt: 12, unitCost: 8.75,   unitPrice: 19.00,  supplier: 'Ferguson' },
+  { id: 'I003', sku: 'PLM-BLL-075',  name: 'Ball Valve 3/4" Brass',     cat: 'PLUMBING', unit: 'each',  qty: 8,  reserved: 2,  reorderPt: 15, unitCost: 14.50,  unitPrice: 32.00,  supplier: 'Ferguson' },
+  { id: 'I004', sku: 'PLM-SHK-ADJ',  name: 'Drain Snake 50ft Power',    cat: 'TOOLS',    unit: 'each',  qty: 0,  reserved: 0,  reorderPt: 2,  unitCost: 320.00, unitPrice: 0,      supplier: 'Ridgid' },
+  { id: 'I005', sku: 'PLM-PTR-075',  name: 'P-Trap Assembly 3/4"',      cat: 'PLUMBING', unit: 'each',  qty: 24, reserved: 3,  reorderPt: 10, unitCost: 7.50,   unitPrice: 18.00,  supplier: 'Ferguson' },
+  { id: 'I006', sku: 'PLM-COP-058',  name: 'Copper Pipe 5/8" (10ft)',   cat: 'PLUMBING', unit: 'each',  qty: 12, reserved: 4,  reorderPt: 8,  unitCost: 22.00,  unitPrice: 48.00,  supplier: 'Ferguson' },
+  { id: 'I007', sku: 'PLM-WXR-KIT',  name: 'Wax Ring & Bolt Kit',       cat: 'PLUMBING', unit: 'kit',   qty: 18, reserved: 0,  reorderPt: 10, unitCost: 5.25,   unitPrice: 12.00,  supplier: 'Ferguson' },
+  { id: 'I008', sku: 'TLS-CAM-SNK',  name: 'Sewer Camera 100ft',        cat: 'TOOLS',    unit: 'each',  qty: 2,  reserved: 1,  reorderPt: 1,  unitCost: 1800.00,unitPrice: 0,      supplier: 'Ridgid' },
 ]
 
 const stockLevel = (item: typeof ITEMS[0]) => {
@@ -33,7 +33,7 @@ export default function InventoryPage() {
   const [search, setSearch] = useState('')
   const [cat, setCat] = useState<Category>('ALL')
 
-  const cats: Category[] = ['ALL', 'PLUMBING', 'ELECTRICAL', 'HVAC', 'CARPENTRY', 'HARDWARE', 'TOOLS']
+  const cats: Category[] = ['ALL', 'PLUMBING', 'TOOLS', 'HARDWARE', 'ELECTRICAL', 'HVAC', 'CARPENTRY']
 
   const filtered = ITEMS.filter(item => {
     const q = search.toLowerCase()

@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" style="background:#111">
+  <!-- Cabinet interior background -->
+  <defs>
+    <radialGradient id="leak-glow" cx="42%" cy="46%" r="12%">
+      <stop offset="0%" stop-color="#7ecfff" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#7ecfff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pipe-chrome" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#5a5a5a"/>
+      <stop offset="20%"  stop-color="#9a9a9a"/>
+      <stop offset="50%"  stop-color="#c8c8c8"/>
+      <stop offset="80%"  stop-color="#8a8a8a"/>
+      <stop offset="100%" stop-color="#4a4a4a"/>
+    </linearGradient>
+    <linearGradient id="pipe-chrome-h" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#9a9a9a"/>
+      <stop offset="30%"  stop-color="#c8c8c8"/>
+      <stop offset="70%"  stop-color="#8a8a8a"/>
+      <stop offset="100%" stop-color="#4a4a4a"/>
+    </linearGradient>
+    <linearGradient id="wet-floor" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#1a3550" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#0d1f2d" stop-opacity="0.6"/>
+    </linearGradient>
+    <filter id="drip-blur">
+      <feGaussianBlur stdDeviation="1.2"/>
+    </filter>
+  </defs>
+
+  <!-- Dark cabinet interior walls -->
+  <rect width="480" height="360" fill="#151515"/>
+  <!-- Left wall panel -->
+  <rect x="0" y="0" width="60" height="360" fill="#1c1c1c"/>
+  <rect x="55" y="0" width="3" height="360" fill="#252525"/>
+  <!-- Right wall panel -->
+  <rect x="420" y="0" width="60" height="360" fill="#1c1c1c"/>
+  <rect x="422" y="0" width="3" height="360" fill="#252525"/>
+  <!-- Top shelf -->
+  <rect x="0" y="0" width="480" height="18" fill="#222"/>
+  <rect x="0" y="15" width="480" height="4" fill="#2a2a2a"/>
+  <!-- Cabinet floor -->
+  <rect x="0" y="320" width="480" height="40" fill="#1a1a1a"/>
+  <rect x="0" y="318" width="480" height="4" fill="#232323"/>
+
+  <!-- Grime/staining on cabinet floor -->
+  <ellipse cx="210" cy="335" rx="95" ry="14" fill="#1a2d1a" opacity="0.5"/>
+  <ellipse cx="215" cy="337" rx="60" ry="8"  fill="#0d1f0d" opacity="0.4"/>
+
+  <!-- Wet puddle on floor (water pooling) -->
+  <ellipse cx="208" cy="333" rx="80" ry="10" fill="url(#wet-floor)"/>
+  <ellipse cx="200" cy="334" rx="50" ry="6"  fill="#1e4060" opacity="0.6"/>
+  <!-- Puddle shine -->
+  <ellipse cx="188" cy="330" rx="18" ry="3"  fill="#4a9ac4" opacity="0.18"/>
+
+  <!-- Glow at leak point -->
+  <ellipse cx="202" cy="168" rx="40" ry="30" fill="url(#leak-glow)"/>
+
+  <!-- ── Drain pipes from sink above ── -->
+  <!-- Left sink drain vertical pipe (tail piece) -->
+  <rect x="168" y="18" width="28" height="108" fill="url(#pipe-chrome)" rx="2"/>
+  <!-- Pipe highlight -->
+  <rect x="174" y="18" width="6" height="108" fill="#d8d8d8" opacity="0.3" rx="1"/>
+  <!-- Pipe shadow -->
+  <rect x="190" y="18" width="4" height="108" fill="#222" opacity="0.3"/>
+
+  <!-- Slip-joint nut at top of P-trap (the failing joint) -->
+  <rect x="163" y="116" width="38" height="16" fill="#7a7a7a" rx="3"/>
+  <rect x="165" y="117" width="34" height="7"  fill="#9a9a9a" opacity="0.6" rx="2"/>
+  <!-- Joint ring detail -->
+  <rect x="163" y="130" width="38" height="5" fill="#666" rx="1"/>
+
+  <!-- LEAKING JOINT HIGHLIGHT (red crack/gap) -->
+  <rect x="163" y="126" width="38" height="3" fill="#3a1515" opacity="0.9" rx="1"/>
+  <rect x="170" y="126" width="22" height="2" fill="#7a2020" opacity="0.7" rx="1"/>
+
+  <!-- P-trap horizontal arm (left section going to J-bend) -->
+  <rect x="90"  y="130" width="118" height="26" fill="url(#pipe-chrome)" rx="3"/>
+  <rect x="90"  y="132" width="118" height="8"  fill="#d0d0d0" opacity="0.25" rx="1"/>
+
+  <!-- J-bend / U-trap curve -->
+  <!-- Outer curve -->
+  <path d="M 90 130 Q 62 130 62 165 Q 62 200 90 200"
+        fill="none" stroke="#8a8a8a" stroke-width="26" stroke-linecap="round"/>
+  <!-- Inner highlight on curve -->
+  <path d="M 90 133 Q 68 133 68 165 Q 68 197 90 197"
+        fill="none" stroke="#c0c0c0" stroke-width="10" stroke-linecap="round" opacity="0.3"/>
+
+  <!-- P-trap horizontal arm (right section coming out of J-bend) -->
+  <rect x="90"  y="187" width="100" height="26" fill="url(#pipe-chrome)" rx="3"/>
+  <rect x="90"  y="189" width="100" height="8"  fill="#d0d0d0" opacity="0.25" rx="1"/>
+
+  <!-- Extension pipe going to wall drain -->
+  <rect x="186" y="193" width="180" height="20" fill="url(#pipe-chrome)" rx="2"/>
+  <rect x="186" y="194" width="180" height="6"  fill="#d0d0d0" opacity="0.2" rx="1"/>
+
+  <!-- Wall escutcheon/drain flange -->
+  <ellipse cx="366" cy="203" rx="18" ry="22" fill="#5a5a5a"/>
+  <ellipse cx="366" cy="203" rx="12" ry="15" fill="#3a3a3a"/>
+  <ellipse cx="366" cy="203" rx="8"  ry="10" fill="#222"/>
+
+  <!-- Slip nut on right side of P-trap arm -->
+  <rect x="182" y="189" width="10" height="24" fill="#7a7a7a" rx="2"/>
+  <rect x="183" y="191" width="7"  height="10" fill="#9a9a9a" opacity="0.5" rx="1"/>
+
+  <!-- ─────── WATER DRIPPING FROM JOINT ─────── -->
+  <!-- Wet stain/streak on pipe surface below joint -->
+  <path d="M 178 134 Q 175 155 177 175 Q 178 200 176 230 Q 174 260 177 300 Q 178 315 176 325"
+        fill="none" stroke="#4a9ac4" stroke-width="2.5" opacity="0.45" stroke-linecap="round"/>
+  <path d="M 195 134 Q 198 160 196 185 Q 194 215 196 250 Q 197 275 195 310"
+        fill="none" stroke="#4a9ac4" stroke-width="1.5" opacity="0.25" stroke-linecap="round"/>
+
+  <!-- Active drip drops -->
+  <!-- Drop 1 (just leaving joint) -->
+  <ellipse cx="182" cy="145" rx="4"   ry="6.5" fill="#6bbee0" opacity="0.95"/>
+  <ellipse cx="181" cy="143" rx="1.5" ry="2"   fill="#aadff5" opacity="0.6"/>
+  <!-- Drop 2 -->
+  <ellipse cx="179" cy="172" rx="3.5" ry="5.5" fill="#5ab4da" opacity="0.85"/>
+  <ellipse cx="178" cy="170" rx="1.2" ry="1.8" fill="#aadff5" opacity="0.5"/>
+  <!-- Drop 3 -->
+  <ellipse cx="184" cy="197" rx="3"   ry="4.5" fill="#50a8ce" opacity="0.75"/>
+  <!-- Drop 4 -->
+  <ellipse cx="180" cy="220" rx="2.5" ry="4"   fill="#4a9ac4" opacity="0.65"/>
+  <!-- Drop 5 -->
+  <ellipse cx="183" cy="245" rx="2.5" ry="4"   fill="#4a9ac4" opacity="0.55"/>
+  <!-- Drop 6 -->
+  <ellipse cx="180" cy="268" rx="2"   ry="3.5" fill="#3a8ab4" opacity="0.45"/>
+  <!-- Drop 7 (about to hit floor) -->
+  <ellipse cx="182" cy="293" rx="3"   ry="5"   fill="#3a8ab4" opacity="0.5"/>
+  <!-- Splash at floor -->
+  <ellipse cx="207" cy="323" rx="7"   ry="2.5" fill="#4a9ac4" opacity="0.45"/>
+  <ellipse cx="196" cy="326" rx="3.5" ry="1.5" fill="#4a9ac4" opacity="0.3"/>
+  <ellipse cx="220" cy="325" rx="3"   ry="1.2" fill="#4a9ac4" opacity="0.25"/>
+
+  <!-- Mineral deposit / rust stain around leak joint -->
+  <ellipse cx="183" cy="135" rx="20"  ry="5"   fill="#8a6020" opacity="0.25"/>
+  <ellipse cx="180" cy="137" rx="10"  ry="3"   fill="#6a4010" opacity="0.2"/>
+
+  <!-- Annotation arrow + label -->
+  <line x1="250" y1="118" x2="208" y2="130" stroke="#ff5555" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <circle cx="250" cy="118" r="2" fill="#ff5555"/>
+  <rect x="252" y="104" width="115" height="28" rx="4" fill="#ff5555" opacity="0.15"/>
+  <rect x="252" y="104" width="115" height="28" rx="4" fill="none" stroke="#ff5555" stroke-width="1" opacity="0.6"/>
+  <text x="309" y="122" text-anchor="middle" fill="#ff8888" font-size="11" font-family="monospace" font-weight="bold">SLIP JOINT LEAK</text>
+
+  <!-- Second annotation for water damage -->
+  <line x1="280" y1="310" x2="225" y2="328" stroke="#ffaa33" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <circle cx="280" cy="310" r="2" fill="#ffaa33"/>
+  <text x="282" y="308" fill="#ffaa33" font-size="10" font-family="monospace">water pooling</text>
+
+  <!-- Slight vignette overlay -->
+  <radialGradient id="vignette" cx="50%" cy="50%" r="75%">
+    <stop offset="0%"   stop-color="transparent"/>
+    <stop offset="100%" stop-color="#000" stop-opacity="0.55"/>
+  </radialGradient>
+  <rect width="480" height="360" fill="url(#vignette)"/>
+</svg>
