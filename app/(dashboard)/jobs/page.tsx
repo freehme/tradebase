@@ -4,69 +4,87 @@ import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Search, Plus, Phone, Mail } from 'lucide-react'
-import { formatPhone } from '@/lib/utils'
+import {
+  Search, Filter, Plus, MapPin, Clock, User,
+  AlertTriangle, ChevronRight, ClipboardList,
+} from 'lucide-react'
+import Link from 'next/link'
+import { formatCurrency, formatDate } from '@/lib/utils'
 
-const TEAM = [
-  { id: 'u1', name: 'Carlos Martinez', role: 'TECHNICIAN', trade: 'Drain Clearing / Water Heaters',  phone: '6025551001', email: 'carlos@tradebase.co',  status: 'ON_SITE',   activeJob: 'JOB-26-10021', rate: 52 },
-  { id: 'u2', name: 'Dana Lee',        role: 'TECHNICIAN', trade: 'Leak Detection / Repiping',        phone: '4805551002', email: 'dana@tradebase.co',    status: 'EN_ROUTE',  activeJob: 'JOB-26-10018', rate: 52 },
-  { id: 'u3', name: 'Phil Torres',     role: 'TECHNICIAN', trade: 'Commercial Plumbing / Backflow',   phone: '6235551003', email: 'phil@tradebase.co',    status: 'AVAILABLE', activeJob: null,           rate: 58 },
-  { id: 'u4', name: 'Amy Johnson',     role: 'TECHNICIAN', trade: 'Drain Cleaning / Hydro-Jetting',   phone: '4805551004', email: 'amy@tradebase.co',     status: 'AVAILABLE', activeJob: null,           rate: 50 },
-  { id: 'u5', name: 'Sam Kim',         role: 'TECHNICIAN', trade: 'Fixtures / Water Heaters',         phone: '6025551005', email: 'sam@tradebase.co',     status: 'AVAILABLE', activeJob: null,           rate: 50 },
-  { id: 'u6', name: 'Grace Wu',        role: 'DISPATCHER', trade: null,                          phone: '4805551007', email: 'grace@tradebase.co',   status: 'OFFICE',    activeJob: null,           rate: 35 },
-  { id: 'u7', name: 'Marcus Allen',    role: 'MANAGER',    trade: null,                          phone: '6025551008', email: 'marcus@tradebase.co',  status: 'OFFICE',    activeJob: null,           rate: 72 },
-  { id: 'u8', name: 'Jordan Frost',    role: 'ADMIN',      trade: null,                          phone: '6025559001', email: 'admin@tradebase.co',   status: 'OFFICE',    activeJob: null,           rate: 85 },
+const JOBS = [
+  {
+    id: 'JOB-26-10021', title: 'Kitchen P-Trap Leak', type: 'REPAIR', status: 'IN_PROGRESS', priority: 'EMERGENCY',
+    customer: 'Maria Santos', address: '412 Oak St, Phoenix AZ 85001',
+    estimatedHours: 1.5, estimatedCost: 340, scheduledStart: new Date(),
+    tech: 'Carlos M.', createdAt: new Date(Date.now() - 2 * 3600000),
+  },
+  {
+    id: 'JOB-26-10020', title: 'Master Bath Full Re-pipe', type: 'RENOVATION', status: 'SCHEDULED', priority: 'MEDIUM',
+    customer: 'Tom Reeves', address: '88 Maple Ave, Scottsdale AZ 85251',
+    estimatedHours: 14, estimatedCost: 4800, scheduledStart: new Date(Date.now() + 2 * 86400000),
+    tech: 'Dana L.', createdAt: new Date(Date.now() - 5 * 86400000),
+  },
+  {
+    id: 'JOB-26-10019', title: 'Main Line Hydro-Jetting', type: 'REPAIR', status: 'QUOTED', priority: 'HIGH',
+    customer: 'ABC Rentals LLC', address: '1200 Commerce Dr, Tempe AZ 85281',
+    estimatedHours: 3, estimatedCost: 1100, scheduledStart: null,
+    tech: null, createdAt: new Date(Date.now() - 1 * 86400000),
+  },
+  {
+    id: 'JOB-26-10018', title: 'Water Heater Leak Assessment', type: 'REPAIR', status: 'ASSESSMENT', priority: 'MEDIUM',
+    customer: 'Jennifer Park', address: '55 Birch Ln, Mesa AZ 85201',
+    estimatedHours: null, estimatedCost: null, scheduledStart: null,
+    tech: null, createdAt: new Date(Date.now() - 3 * 3600000),
+  },
+  {
+    id: 'JOB-26-10017', title: 'Sewer Line Camera Scope', type: 'INSPECTION', status: 'COMPLETED', priority: 'LOW',
+    customer: 'Westside HOA', address: '900 River Rd, Glendale AZ 85301',
+    estimatedHours: 2, estimatedCost: 650, scheduledStart: new Date(Date.now() - 1 * 86400000),
+    tech: 'Carlos M.', createdAt: new Date(Date.now() - 7 * 86400000),
+  },
+  {
+    id: 'JOB-26-10016', title: 'Bathroom Drain Clog', type: 'REPAIR', status: 'INQUIRY', priority: 'LOW',
+    customer: 'Sandra Kim', address: '22 Elm St, Chandler AZ 85224',
+    estimatedHours: null, estimatedCost: null, scheduledStart: null,
+    tech: null, createdAt: new Date(Date.now() - 30 * 60000),
+  },
 ]
 
-const STATUS_CONFIG: Record<string, { label: string; dot: string; badge: 'success' | 'warning' | 'info' | 'outline' }> = {
-  ON_SITE:   { label: 'On Site',   dot: 'bg-emerald-500 animate-pulse', badge: 'success' },
-  EN_ROUTE:  { label: 'En Route',  dot: 'bg-yellow-500',                badge: 'warning' },
-  AVAILABLE: { label: 'Available', dot: 'bg-blue-500',                  badge: 'info' },
-  OFFICE:    { label: 'Office',    dot: 'bg-muted-foreground',          badge: 'outline' },
-  OFF:       { label: 'Off',       dot: 'bg-border',                    badge: 'outline' },
+const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'info' | 'warning' | 'success' | 'destructive' | 'outline' | 'secondary' }> = {
+  INQUIRY:     { label: 'Inquiry',     variant: 'info' },
+  ASSESSMENT:  { label: 'Assessment',  variant: 'default' },
+  QUOTED:      { label: 'Quoted',      variant: 'warning' },
+  APPROVED:    { label: 'Approved',    variant: 'success' },
+  SCHEDULED:   { label: 'Scheduled',  variant: 'info' },
+  IN_PROGRESS: { label: 'In Progress', variant: 'warning' },
+  COMPLETED:   { label: 'Completed',   variant: 'success' },
+  CANCELLED:   { label: 'Cancelled',   variant: 'destructive' },
+  INVOICED:    { label: 'Invoiced',    variant: 'default' },
+  PAID:        { label: 'Paid',        variant: 'success' },
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  ADMIN: 'Admin', MANAGER: 'Manager', DISPATCHER: 'Dispatcher',
-  TECHNICIAN: 'Technician', SALES: 'Sales', BILLING: 'Billing',
+const PRIORITY_COLOR: Record<string, string> = {
+  LOW:       'text-slate-400',
+  MEDIUM:    'text-yellow-400',
+  HIGH:      'text-orange-400',
+  EMERGENCY: 'text-red-400',
 }
 
-export default function TeamPage() {
+const STATUSES = ['ALL', 'INQUIRY', 'ASSESSMENT', 'QUOTED', 'SCHEDULED', 'IN_PROGRESS', 'COMPLETED']
+
+export default function JobsPage() {
   const [search, setSearch] = useState('')
-  const [roleFilter, setRoleFilter] = useState('ALL')
+  const [statusFilter, setStatusFilter] = useState('ALL')
 
-  const roles = ['ALL', 'TECHNICIAN', 'DISPATCHER', 'MANAGER']
-
-  const filtered = TEAM.filter(m => {
+  const filtered = JOBS.filter(j => {
     const q = search.toLowerCase()
-    const mS = !q || m.name.toLowerCase().includes(q) || (m.trade ?? '').toLowerCase().includes(q)
-    const mR = roleFilter === 'ALL' || m.role === roleFilter
-    return mS && mR
+    const matchSearch = !q || j.title.toLowerCase().includes(q) || j.customer.toLowerCase().includes(q) || j.id.toLowerCase().includes(q)
+    const matchStatus = statusFilter === 'ALL' || j.status === statusFilter
+    return matchSearch && matchStatus
   })
 
-  const onSite    = TEAM.filter(m => m.status === 'ON_SITE').length
-  const enRoute   = TEAM.filter(m => m.status === 'EN_ROUTE').length
-  const available = TEAM.filter(m => m.status === 'AVAILABLE').length
-
   return (
-    <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          { label: 'Total Staff',  value: TEAM.length,  color: 'text-foreground' },
-          { label: 'On Site',      value: onSite,       color: 'text-emerald-400' },
-          { label: 'En Route',     value: enRoute,      color: 'text-yellow-400' },
-          { label: 'Available',    value: available,    color: 'text-blue-400' },
-        ].map(s => (
-          <Card key={s.label}>
-            <CardContent className="p-4 text-center">
-              <p className={`text-3xl font-bold ${s.color}`}>{s.value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
+    <div className="space-y-4">
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-48">
@@ -74,72 +92,94 @@ export default function TeamPage() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search team members..."
+            placeholder="Search jobs, customers, ID..."
             className="h-9 w-full rounded-md border border-border bg-background pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
-        <div className="flex gap-1 rounded-lg border border-border bg-card p-1">
-          {roles.map(r => (
+        <div className="flex gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto">
+          {STATUSES.slice(0, 5).map(s => (
             <button
-              key={r}
-              onClick={() => setRoleFilter(r)}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                roleFilter === r ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                statusFilter === s ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {r === 'ALL' ? 'All' : ROLE_LABELS[r]}
+              {s === 'ALL' ? 'All Jobs' : STATUS_CONFIG[s]?.label ?? s}
             </button>
           ))}
         </div>
-        <Button size="sm" className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" /> Add Team Member
-        </Button>
+        <Link href="/jobs/new">
+          <Button size="sm" className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" /> New Job
+          </Button>
+        </Link>
       </div>
 
-      {/* Team grid */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {filtered.map(member => {
-          const cfg = STATUS_CONFIG[member.status]
+      {/* Job count */}
+      <p className="text-xs text-muted-foreground">{filtered.length} job{filtered.length !== 1 ? 's' : ''}</p>
+
+      {/* Jobs list */}
+      <div className="space-y-2">
+        {filtered.map(job => {
+          const cfg = STATUS_CONFIG[job.status]
           return (
-            <Card key={member.id} className="transition-colors hover:border-primary/40">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="relative">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
-                      {member.name.split(' ').map(n => n[0]).join('')}
+            <Link key={job.id} href={`/jobs/${job.id}`}>
+              <Card className="transition-colors hover:border-primary/40">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    {/* Priority indicator */}
+                    <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
+                      job.priority === 'EMERGENCY' ? 'bg-red-500 animate-pulse' :
+                      job.priority === 'HIGH'      ? 'bg-orange-500' :
+                      job.priority === 'MEDIUM'    ? 'bg-yellow-500' : 'bg-slate-500'
+                    }`} />
+
+                    {/* Main info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-foreground">{job.title}</p>
+                            {job.priority === 'EMERGENCY' && (
+                              <span className="flex items-center gap-1 rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-400">
+                                <AlertTriangle className="h-3 w-3" /> EMERGENCY
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{job.id} · {job.type}</p>
+                        </div>
+                        <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                      </div>
+
+                      <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <User className="h-3 w-3" /> {job.customer}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" /> {job.address}
+                        </span>
+                        {job.estimatedHours && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" /> {job.estimatedHours} hrs
+                          </span>
+                        )}
+                        {job.estimatedCost && (
+                          <span className="font-medium text-foreground">{formatCurrency(job.estimatedCost)}</span>
+                        )}
+                        {job.tech && (
+                          <span className="flex items-center gap-1">
+                            <ClipboardList className="h-3 w-3" /> {job.tech}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card ${cfg.dot}`} />
+
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-semibold text-foreground text-sm">{member.name}</p>
-                        <p className="text-xs text-muted-foreground">{ROLE_LABELS[member.role]}{member.trade ? ` · ${member.trade}` : ''}</p>
-                      </div>
-                      <Badge variant={cfg.badge} className="text-[9px] shrink-0">{cfg.label}</Badge>
-                    </div>
-                    <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Phone className="h-3 w-3" /> {formatPhone(member.phone)}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Mail className="h-3 w-3" /> {member.email}
-                      </div>
-                    </div>
-                    {member.activeJob && (
-                      <div className="mt-2 rounded-md border border-border bg-muted/40 px-2 py-1 text-xs">
-                        <span className="text-muted-foreground">Active: </span>
-                        <span className="font-medium text-foreground">{member.activeJob}</span>
-                      </div>
-                    )}
-                    <div className="mt-2 flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">${member.rate}/hr</span>
-                      <Button size="sm" variant="ghost" className="h-6 px-2 text-xs">View</Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           )
         })}
       </div>

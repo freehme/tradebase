@@ -1,148 +1,198 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Search, Plus, Phone, Mail } from 'lucide-react'
-import { formatPhone } from '@/lib/utils'
+import { TrendingUp, TrendingDown, Plus, DollarSign } from 'lucide-react'
+import { formatCurrency } from '@/lib/utils'
 
-const TEAM = [
-  { id: 'u1', name: 'Carlos Martinez', role: 'TECHNICIAN', trade: 'Drain Clearing / Water Heaters',  phone: '6025551001', email: 'carlos@tradebase.co',  status: 'ON_SITE',   activeJob: 'JOB-26-10021', rate: 52 },
-  { id: 'u2', name: 'Dana Lee',        role: 'TECHNICIAN', trade: 'Leak Detection / Repiping',        phone: '4805551002', email: 'dana@tradebase.co',    status: 'EN_ROUTE',  activeJob: 'JOB-26-10018', rate: 52 },
-  { id: 'u3', name: 'Phil Torres',     role: 'TECHNICIAN', trade: 'Commercial Plumbing / Backflow',   phone: '6235551003', email: 'phil@tradebase.co',    status: 'AVAILABLE', activeJob: null,           rate: 58 },
-  { id: 'u4', name: 'Amy Johnson',     role: 'TECHNICIAN', trade: 'Drain Cleaning / Hydro-Jetting',   phone: '4805551004', email: 'amy@tradebase.co',     status: 'AVAILABLE', activeJob: null,           rate: 50 },
-  { id: 'u5', name: 'Sam Kim',         role: 'TECHNICIAN', trade: 'Fixtures / Water Heaters',         phone: '6025551005', email: 'sam@tradebase.co',     status: 'AVAILABLE', activeJob: null,           rate: 50 },
-  { id: 'u6', name: 'Grace Wu',        role: 'DISPATCHER', trade: null,                          phone: '4805551007', email: 'grace@tradebase.co',   status: 'OFFICE',    activeJob: null,           rate: 35 },
-  { id: 'u7', name: 'Marcus Allen',    role: 'MANAGER',    trade: null,                          phone: '6025551008', email: 'marcus@tradebase.co',  status: 'OFFICE',    activeJob: null,           rate: 72 },
-  { id: 'u8', name: 'Jordan Frost',    role: 'ADMIN',      trade: null,                          phone: '6025559001', email: 'admin@tradebase.co',   status: 'OFFICE',    activeJob: null,           rate: 85 },
+const BUDGET_CATEGORIES = [
+  { name: 'Labor — Plumbing',      allocated: 68000, spent: 58200, color: '#3b82f6' },
+  { name: 'Labor — Drain / Sewer', allocated: 32000, spent: 29100, color: '#8b5cf6' },
+  { name: 'Labor — Pipe Fitting',  allocated: 28000, spent: 24500, color: '#10b981' },
+  { name: 'Labor — Apprentice',    allocated: 22000, spent: 19800, color: '#f59e0b' },
+  { name: 'Materials & Fittings',  allocated: 55000, spent: 48900, color: '#ef4444' },
+  { name: 'Equipment Rental',      allocated: 12000, spent: 8400,  color: '#06b6d4' },
+  { name: 'Subcontractors',        allocated: 18000, spent: 19500, color: '#f97316' },
+  { name: 'Vehicle & Fuel',        allocated: 9000,  spent: 7200,  color: '#84cc16' },
+  { name: 'Overhead',              allocated: 15000, spent: 13100, color: '#64748b' },
 ]
 
-const STATUS_CONFIG: Record<string, { label: string; dot: string; badge: 'success' | 'warning' | 'info' | 'outline' }> = {
-  ON_SITE:   { label: 'On Site',   dot: 'bg-emerald-500 animate-pulse', badge: 'success' },
-  EN_ROUTE:  { label: 'En Route',  dot: 'bg-yellow-500',                badge: 'warning' },
-  AVAILABLE: { label: 'Available', dot: 'bg-blue-500',                  badge: 'info' },
-  OFFICE:    { label: 'Office',    dot: 'bg-muted-foreground',          badge: 'outline' },
-  OFF:       { label: 'Off',       dot: 'bg-border',                    badge: 'outline' },
-}
+const MONTHLY = [
+  { month: 'Oct', revenue: 148000, expenses: 112000 },
+  { month: 'Nov', revenue: 162000, expenses: 121000 },
+  { month: 'Dec', revenue: 138000, expenses: 108000 },
+  { month: 'Jan', revenue: 155000, expenses: 118000 },
+  { month: 'Feb', revenue: 172000, expenses: 129000 },
+  { month: 'Mar', revenue: 191000, expenses: 138000 },
+  { month: 'Apr', revenue: 142800, expenses: 99700 },
+]
 
-const ROLE_LABELS: Record<string, string> = {
-  ADMIN: 'Admin', MANAGER: 'Manager', DISPATCHER: 'Dispatcher',
-  TECHNICIAN: 'Technician', SALES: 'Sales', BILLING: 'Billing',
-}
+export default function BudgetingPage() {
+  const totalAllocated = BUDGET_CATEGORIES.reduce((s, c) => s + c.allocated, 0)
+  const totalSpent     = BUDGET_CATEGORIES.reduce((s, c) => s + c.spent, 0)
+  const overBudget     = BUDGET_CATEGORIES.filter(c => c.spent > c.allocated)
+  const currentMonth   = MONTHLY[MONTHLY.length - 1]
+  const prevMonth      = MONTHLY[MONTHLY.length - 2]
+  const revenueChange  = ((currentMonth.revenue - prevMonth.revenue) / prevMonth.revenue) * 100
+  const profitMargin   = ((currentMonth.revenue - currentMonth.expenses) / currentMonth.revenue) * 100
 
-export default function TeamPage() {
-  const [search, setSearch] = useState('')
-  const [roleFilter, setRoleFilter] = useState('ALL')
-
-  const roles = ['ALL', 'TECHNICIAN', 'DISPATCHER', 'MANAGER']
-
-  const filtered = TEAM.filter(m => {
-    const q = search.toLowerCase()
-    const mS = !q || m.name.toLowerCase().includes(q) || (m.trade ?? '').toLowerCase().includes(q)
-    const mR = roleFilter === 'ALL' || m.role === roleFilter
-    return mS && mR
-  })
-
-  const onSite    = TEAM.filter(m => m.status === 'ON_SITE').length
-  const enRoute   = TEAM.filter(m => m.status === 'EN_ROUTE').length
-  const available = TEAM.filter(m => m.status === 'AVAILABLE').length
+  const maxBar = Math.max(...MONTHLY.map(m => m.revenue))
 
   return (
     <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      {/* KPIs */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
-          { label: 'Total Staff',  value: TEAM.length,  color: 'text-foreground' },
-          { label: 'On Site',      value: onSite,       color: 'text-emerald-400' },
-          { label: 'En Route',     value: enRoute,      color: 'text-yellow-400' },
-          { label: 'Available',    value: available,    color: 'text-blue-400' },
-        ].map(s => (
-          <Card key={s.label}>
-            <CardContent className="p-4 text-center">
-              <p className={`text-3xl font-bold ${s.color}`}>{s.value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Controls */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search team members..."
-            className="h-9 w-full rounded-md border border-border bg-background pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-        </div>
-        <div className="flex gap-1 rounded-lg border border-border bg-card p-1">
-          {roles.map(r => (
-            <button
-              key={r}
-              onClick={() => setRoleFilter(r)}
-              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                roleFilter === r ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {r === 'ALL' ? 'All' : ROLE_LABELS[r]}
-            </button>
-          ))}
-        </div>
-        <Button size="sm" className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" /> Add Team Member
-        </Button>
-      </div>
-
-      {/* Team grid */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {filtered.map(member => {
-          const cfg = STATUS_CONFIG[member.status]
+          {
+            label: 'Monthly Revenue',
+            value: formatCurrency(currentMonth.revenue),
+            sub: `${revenueChange > 0 ? '+' : ''}${revenueChange.toFixed(1)}% vs last month`,
+            trend: revenueChange > 0 ? 'up' : 'down',
+            color: 'text-emerald-400',
+          },
+          {
+            label: 'Monthly Expenses',
+            value: formatCurrency(currentMonth.expenses),
+            sub: 'vs budget ' + formatCurrency(totalAllocated),
+            trend: currentMonth.expenses > totalAllocated ? 'up' : 'down',
+            color: currentMonth.expenses > totalAllocated ? 'text-red-400' : 'text-foreground',
+          },
+          {
+            label: 'Gross Profit',
+            value: formatCurrency(currentMonth.revenue - currentMonth.expenses),
+            sub: `${profitMargin.toFixed(1)}% margin`,
+            trend: 'up',
+            color: 'text-emerald-400',
+          },
+          {
+            label: 'Over Budget Items',
+            value: String(overBudget.length),
+            sub: overBudget.map(c => c.name.split(' — ')[0]).join(', '),
+            trend: overBudget.length > 0 ? 'up' : 'down',
+            color: overBudget.length > 0 ? 'text-red-400' : 'text-emerald-400',
+          },
+        ].map(kpi => {
+          const TrendIcon = kpi.trend === 'up' ? TrendingUp : TrendingDown
           return (
-            <Card key={member.id} className="transition-colors hover:border-primary/40">
+            <Card key={kpi.label}>
               <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="relative">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/20 text-sm font-bold text-primary">
-                      {member.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card ${cfg.dot}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-semibold text-foreground text-sm">{member.name}</p>
-                        <p className="text-xs text-muted-foreground">{ROLE_LABELS[member.role]}{member.trade ? ` · ${member.trade}` : ''}</p>
-                      </div>
-                      <Badge variant={cfg.badge} className="text-[9px] shrink-0">{cfg.label}</Badge>
-                    </div>
-                    <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Phone className="h-3 w-3" /> {formatPhone(member.phone)}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Mail className="h-3 w-3" /> {member.email}
-                      </div>
-                    </div>
-                    {member.activeJob && (
-                      <div className="mt-2 rounded-md border border-border bg-muted/40 px-2 py-1 text-xs">
-                        <span className="text-muted-foreground">Active: </span>
-                        <span className="font-medium text-foreground">{member.activeJob}</span>
-                      </div>
-                    )}
-                    <div className="mt-2 flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">${member.rate}/hr</span>
-                      <Button size="sm" variant="ghost" className="h-6 px-2 text-xs">View</Button>
-                    </div>
-                  </div>
+                <p className="text-xs text-muted-foreground">{kpi.label}</p>
+                <p className={`mt-1 text-xl font-bold ${kpi.color}`}>{kpi.value}</p>
+                <div className="mt-1 flex items-center gap-1">
+                  <TrendIcon className={`h-3 w-3 ${kpi.color}`} />
+                  <span className="text-[10px] text-muted-foreground">{kpi.sub}</span>
                 </div>
               </CardContent>
             </Card>
           )
         })}
       </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Revenue vs Expenses bar chart */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-sm">Revenue vs Expenses — Last 7 Months</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-3 h-40">
+              {MONTHLY.map(m => (
+                <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
+                  <div className="w-full flex items-end gap-1 h-32">
+                    <div
+                      className="flex-1 rounded-t bg-primary/70 transition-all"
+                      style={{ height: `${(m.revenue / maxBar) * 100}%` }}
+                      title={`Revenue: ${formatCurrency(m.revenue)}`}
+                    />
+                    <div
+                      className="flex-1 rounded-t bg-destructive/50 transition-all"
+                      style={{ height: `${(m.expenses / maxBar) * 100}%` }}
+                      title={`Expenses: ${formatCurrency(m.expenses)}`}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">{m.month}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded bg-primary/70 inline-block" /> Revenue</span>
+              <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded bg-destructive/50 inline-block" /> Expenses</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Budget summary */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm">Monthly Budget</CardTitle>
+              <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
+                <Plus className="h-3 w-3" /> Edit
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Total Budget</span>
+              <span className="font-bold text-foreground">{formatCurrency(totalAllocated)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Spent to Date</span>
+              <span className={`font-bold ${totalSpent > totalAllocated ? 'text-red-400' : 'text-foreground'}`}>
+                {formatCurrency(totalSpent)}
+              </span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-border mt-2">
+              <div
+                className={`h-2 rounded-full transition-all ${totalSpent > totalAllocated ? 'bg-red-500' : 'bg-primary'}`}
+                style={{ width: `${Math.min(100, (totalSpent / totalAllocated) * 100)}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              {((totalSpent / totalAllocated) * 100).toFixed(1)}% of budget used
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Category breakdown */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-sm">Budget by Category</CardTitle>
+          <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
+            <Plus className="h-3 w-3" /> Add Category
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {BUDGET_CATEGORIES.map(cat => {
+            const pct = Math.min(100, (cat.spent / cat.allocated) * 100)
+            const over = cat.spent > cat.allocated
+            return (
+              <div key={cat.name}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                    <span className="text-xs font-medium text-foreground">{cat.name}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className={over ? 'text-red-400 font-semibold' : 'text-muted-foreground'}>
+                      {formatCurrency(cat.spent)}
+                    </span>
+                    <span className="text-muted-foreground">/ {formatCurrency(cat.allocated)}</span>
+                    {over && <span className="rounded-full bg-red-500/20 px-1.5 py-0.5 text-[10px] font-bold text-red-400">OVER</span>}
+                  </div>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-border">
+                  <div
+                    className={`h-1.5 rounded-full transition-all ${over ? 'bg-red-500' : 'bg-primary'}`}
+                    style={{ width: `${pct}%`, backgroundColor: over ? undefined : cat.color }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </CardContent>
+      </Card>
     </div>
   )
 }
