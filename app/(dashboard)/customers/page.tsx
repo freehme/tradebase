@@ -9,12 +9,12 @@ import Link from 'next/link'
 import { formatPhone } from '@/lib/utils'
 
 const CUSTOMERS = [
-  { id: 'c1', name: 'Maria Santos',    type: 'RESIDENTIAL',       phone: '6025550182', email: 'maria@example.com',   city: 'Phoenix',    jobs: 3, totalSpent: 8400,  lastJob: '2 days ago' },
-  { id: 'c2', name: 'Tom Reeves',      type: 'RESIDENTIAL',       phone: '4805550234', email: 'tom@tomreeves.com',   city: 'Scottsdale', jobs: 1, totalSpent: 0,     lastJob: 'Pending' },
-  { id: 'c3', name: 'ABC Rentals LLC', type: 'PROPERTY_MANAGER',  phone: '6235550091', email: 'ops@abcrentals.com', city: 'Tempe',      jobs: 8, totalSpent: 42100, lastJob: '1 day ago' },
-  { id: 'c4', name: 'Jennifer Park',   type: 'RESIDENTIAL',       phone: '4805550501', email: null,                  city: 'Mesa',       jobs: 1, totalSpent: 0,     lastJob: 'Assessment' },
-  { id: 'c5', name: 'Westside HOA',    type: 'COMMERCIAL',        phone: '6235550050', email: 'mgr@westside.com',   city: 'Glendale',   jobs: 5, totalSpent: 31800, lastJob: '5 days ago' },
-  { id: 'c6', name: 'Bob Chen',        type: 'RESIDENTIAL',       phone: '4805550300', email: 'bchen@gmail.com',    city: 'Scottsdale', jobs: 2, totalSpent: 9800,  lastJob: '2 weeks ago' },
+  { id: 'c1', name: 'Linda Chen',                   type: 'RESIDENTIAL',      phone: '6025550182', email: 'linda.chen@gmail.com',      city: 'Phoenix',    jobs: 2, totalSpent: 485,   lastJob: 'Today' },
+  { id: 'c2', name: 'Robert Martinez',              type: 'RESIDENTIAL',      phone: '4805550234', email: 'rmartinez@outlook.com',     city: 'Scottsdale', jobs: 3, totalSpent: 1240,  lastJob: '3 days ago' },
+  { id: 'c3', name: 'Sunrise Commercial Properties',type: 'PROPERTY_MANAGER', phone: '6235550091', email: 'facilities@sunriseprops.com',city: 'Tempe',     jobs: 5, totalSpent: 24600, lastJob: 'Yesterday' },
+  { id: 'c4', name: 'Jennifer Walsh',               type: 'RESIDENTIAL',      phone: '4805550501', email: 'jwalsh@yahoo.com',          city: 'Mesa',       jobs: 1, totalSpent: 0,     lastJob: 'Assessment' },
+  { id: 'c5', name: 'Westgate Shopping Center',     type: 'COMMERCIAL',       phone: '6235550050', email: 'ops@westgatecenter.com',    city: 'Glendale',   jobs: 8, totalSpent: 18900, lastJob: 'Yesterday' },
+  { id: 'c6', name: 'Derek Okafor',                 type: 'RESIDENTIAL',      phone: '4805550300', email: 'dokafor@gmail.com',         city: 'Phoenix',    jobs: 1, totalSpent: 0,     lastJob: 'Scheduled' },
 ]
 
 const TYPE_LABELS: Record<string, string> = {

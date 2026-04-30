@@ -9,29 +9,29 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 
 const INVOICES = [
   {
-    id: 'inv1', num: 'INV-26-10018', job: 'JOB-26-10017', customer: 'Westside HOA',
-    status: 'PAID', issueDate: new Date(Date.now() - 5 * 86400000), dueDate: new Date(Date.now() + 25 * 86400000),
-    subtotal: 6700, tax: 0, total: 6700, paid: 6700, balance: 0,
+    id: 'inv1', num: 'INV-26-00017', job: 'JOB-26-10017', customer: 'Westgate Shopping Center',
+    status: 'SENT', issueDate: new Date(Date.now() - 1 * 86400000), dueDate: new Date(Date.now() + 29 * 86400000),
+    subtotal: 3590, tax: 308.74, total: 3898.74, paid: 0, balance: 3898.74,
   },
   {
-    id: 'inv2', num: 'INV-26-10017', job: 'JOB-26-10019', customer: 'ABC Rentals LLC',
-    status: 'SENT', issueDate: new Date(Date.now() - 2 * 86400000), dueDate: new Date(Date.now() + 28 * 86400000),
-    subtotal: 3200, tax: 256, total: 3456, paid: 0, balance: 3456,
+    id: 'inv2', num: 'INV-26-00016', job: 'JOB-26-10014', customer: 'Robert Martinez',
+    status: 'PAID', issueDate: new Date(Date.now() - 30 * 86400000), dueDate: new Date(Date.now() - 1 * 86400000),
+    subtotal: 1140, tax: 98.04, total: 1238.04, paid: 1238.04, balance: 0,
   },
   {
-    id: 'inv3', num: 'INV-26-10016', job: 'JOB-26-10015', customer: 'Bob Chen',
-    status: 'OVERDUE', issueDate: new Date(Date.now() - 40 * 86400000), dueDate: new Date(Date.now() - 10 * 86400000),
-    subtotal: 8500, tax: 680, total: 9180, paid: 4000, balance: 5180,
+    id: 'inv3', num: 'INV-26-00015', job: 'JOB-26-10012', customer: 'Sunrise Commercial',
+    status: 'OVERDUE', issueDate: new Date(Date.now() - 45 * 86400000), dueDate: new Date(Date.now() - 15 * 86400000),
+    subtotal: 4850, tax: 417.10, total: 5267.10, paid: 2500, balance: 2767.10,
   },
   {
-    id: 'inv4', num: 'INV-26-10015', job: 'JOB-26-10020', customer: 'Tom Reeves',
+    id: 'inv4', num: 'INV-26-00014', job: 'JOB-26-10019', customer: 'Sunrise Commercial',
     status: 'DRAFT', issueDate: new Date(), dueDate: new Date(Date.now() + 30 * 86400000),
-    subtotal: 18500, tax: 1480, total: 19980, paid: 0, balance: 19980,
+    subtotal: 8400, tax: 722.40, total: 9122.40, paid: 0, balance: 9122.40,
   },
   {
-    id: 'inv5', num: 'INV-26-10014', job: 'JOB-26-10012', customer: 'Sandra Kim',
-    status: 'PARTIAL', issueDate: new Date(Date.now() - 15 * 86400000), dueDate: new Date(Date.now() + 15 * 86400000),
-    subtotal: 4200, tax: 336, total: 4536, paid: 2000, balance: 2536,
+    id: 'inv5', num: 'INV-26-00013', job: 'JOB-26-10010', customer: 'Linda Chen',
+    status: 'PARTIAL', issueDate: new Date(Date.now() - 10 * 86400000), dueDate: new Date(Date.now() + 20 * 86400000),
+    subtotal: 620, tax: 53.32, total: 673.32, paid: 350, balance: 323.32,
   },
 ]
 

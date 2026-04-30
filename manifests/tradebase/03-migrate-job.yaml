@@ -1,0 +1,49 @@
+---
+# One-shot job: runs prisma db push + seed on first deploy.
+# Safe to re-apply — upserts in seed.ts make it idempotent.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tradebase-migrate
+  namespace: tradebase
+  annotations:
+    # Allows re-running via: kubectl delete job tradebase-migrate -n tradebase && kubectl apply -f 03-migrate-job.yaml
+    "helm.sh/hook": post-install,post-upgrade
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h postgres -U tradebase; do
+                echo "waiting for postgres..."
+                sleep 2
+              done
+              echo "postgres is ready"
+          env:
+            - name: PGPASSWORD
+              value: tradebase_local
+      containers:
+        - name: migrate
+          image: tradebase:migrator
+          imagePullPolicy: Never
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: tradebase-secrets
+                  key: DATABASE_URL
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

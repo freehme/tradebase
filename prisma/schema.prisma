@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -536,4 +537,29 @@ model BudgetCategory {
   budget      Budget    @relation(fields: [budgetId], references: [id], onDelete: Cascade)
 
   @@map("budget_categories")
+}
+
+// ─────────────────────────────────────────────
+// CUSTOMER PORTAL INQUIRIES
+// ─────────────────────────────────────────────
+
+model CustomerInquiry {
+  id              String    @id @default(cuid())
+  name            String
+  email           String
+  phone           String?
+  address         String?
+  issueType       String?
+  description     String
+  attachmentPaths Json?
+  aiSummary       String?
+  estimatedHours  Float?
+  estimatedRange  String?
+  urgency         String?
+  status          String    @default("NEW")
+  jobId           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("customer_inquiries")
 }

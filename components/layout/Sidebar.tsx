@@ -17,6 +17,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
+  Wrench,
+  Globe,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -44,6 +46,13 @@ const navItems = [
     items: [
       { label: 'Team',            href: '/team',             icon: HardHat },
       { label: 'Settings',        href: '/settings',         icon: Settings },
+    ],
+  },
+  {
+    group: 'Apps',
+    items: [
+      { label: 'Field App',       href: '/field',            icon: Wrench,  badge: 'MOBILE' },
+      { label: 'Customer Portal', href: '/portal',           icon: Globe,   badge: 'PUBLIC' },
     ],
   },
 ]

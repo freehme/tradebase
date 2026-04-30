@@ -23,7 +23,7 @@ const JOB_TYPES = [
 ]
 
 const TRADE_TYPES = [
-  'Plumbing', 'Electrical', 'HVAC', 'Roofing', 'Carpentry',
+  'Plumbing', 'Electrical', 'Roofing', 'Carpentry',
   'Tile / Flooring', 'Drywall', 'Painting', 'Concrete', 'General',
 ]
 
